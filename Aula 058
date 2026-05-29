@@ -1,0 +1,37 @@
+#include <stdio.h>
+
+// Função recursiva para calcular o dano bônus
+int calcularDanoEco(int n) {
+
+    // Casos base
+    if (n == 1) {
+        return 0;
+    }
+
+    if (n == 2) {
+        return 1;
+    }
+
+    // Passo recursivo
+    return calcularDanoEco(n - 1) +
+           calcularDanoEco(n - 2);
+}
+
+int main() {
+
+    int N;
+    int danoBonus;
+
+    // Leitura do número do golpe
+    printf("Digite o numero do golpe: ");
+    scanf("%d", &N);
+
+    // Calcula o dano bônus
+    danoBonus = calcularDanoEco(N);
+
+    // Exibe o resultado
+    printf("Dano bonus do Golpe Ecoante: %d\n",
+           danoBonus);
+
+    return 0;
+}
