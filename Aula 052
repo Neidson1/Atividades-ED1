@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+typedef struct {
+    int x;
+    int y;
+} Unidade;
+
+int main() {
+
+    int n, i, j;
+    int totalDuplas = 0;
+    float raio, distancia;
+
+    printf("Digite a quantidade de unidades: ");
+    scanf("%d", &n);
+
+    // Alocação dinâmica do vetor
+    Unidade *unidades = (Unidade *) malloc(n * sizeof(Unidade));
+
+    // Verifica se a memória foi alocada
+    if (unidades == NULL) {
+        printf("Erro ao alocar memoria.\n");
+        return 1;
+    }
+
+    // Leitura das coordenadas
+    for (i = 0; i < n; i++) {
+
+        printf("\nUnidade %d\n", i + 1);
+
+        printf("Coordenada X: ");
+        scanf("%d", &unidades[i].x);
+
+        printf("Coordenada Y: ");
+        scanf("%d", &unidades[i].y);
+    }
+
+    // Leitura do raio de explosão
+    printf("\nDigite o raio de explosao: ");
+    scanf("%f", &raio);
+
+    // Comparação entre todas as duplas
+    for (i = 0; i < n; i++) {
+
+        for (j = i + 1; j < n; j++) {
+
+            // Cálculo da distância
+            distancia = sqrt(
+                pow(unidades[j].x - unidades[i].x, 2) +
+                pow(unidades[j].y - unidades[i].y, 2)
+            );
+
+            // Verifica se estão dentro do raio
+            if (distancia <= raio) {
+                totalDuplas++;
+            }
+        }
+    }
+
+    // Exibe o total de duplas próximas
+    printf("\nTotal de duplas proximas: %d\n", totalDuplas);
+
+    // Libera memória
+    free(unidades);
+
+    return 0;
+}
