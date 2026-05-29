@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    int id;
+    int nivel_ameaca;
+} Nave;
+
+// Função de intercalação (merge)
+void intercala(Nave v[], int inicio, int meio, int fim) {
+    int n1 = meio - inicio + 1;
+    int n2 = fim - meio;
+
+    Nave *L = (Nave *)malloc(n1 * sizeof(Nave));
+    Nave *R = (Nave *)malloc(n2 * sizeof(Nave));
+
+    for (int i = 0; i < n1; i++)
+        L[i] = v[inicio + i];
+
+    for (int j = 0; j < n2; j++)
+        R[j] = v[meio + 1 + j];
+
+    int i = 0, j = 0, k = inicio;
+
+    while (i < n1 && j < n2) {
+        if (L[i].nivel_ameaca <= R[j].nivel_ameaca) {
+            v[k] = L[i];
+            i++;
+        } else {
+            v[k] = R[j];
+            j++;
+        }
+        k++;
+    }
+
+    while (i < n1) {
+        v[k] = L[i];
+        i++;
+        k++;
+    }
+
+    while (j < n2) {
+        v[k] = R[j];
+        j++;
+        k++;
+    }
+
+    free(L);
+    free(R);
+}
+
+// Merge Sort
+void mergeSort(Nave v[], int inicio, int fim) {
+    if (inicio < fim) {
+        int meio = (inicio + fim) / 2;
+
+        mergeSort(v, inicio, meio);
+        mergeSort(v, meio + 1, fim);
+
+        intercala(v, inicio, meio, fim);
+    }
+}
+
+int main() {
+    int N;
+
+    scanf("%d", &N);
+
+    Nave naves[N];
+
+    for (int i = 0; i < N; i++) {
+        scanf("%d %d", &naves[i].id, &naves[i].nivel_ameaca);
+    }
+
+    mergeSort(naves, 0, N - 1);
+
+    for (int i = 0; i < N; i++) {
+        printf("%d", naves[i].id);
+        if (i < N - 1) printf(" ");
+    }
+
+    printf("\n");
+
+    return 0;
+}
