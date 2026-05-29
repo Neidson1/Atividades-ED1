@@ -1,0 +1,25 @@
+#include <stdio.h>
+
+int main() {
+
+    float forcaBase, bonusArma, bonusBuff;
+    float danoTotal;
+
+    // Leitura dos valores
+    printf("Digite a forca base: ");
+    scanf("%f", &forcaBase);
+
+    printf("Digite o bonus da arma: ");
+    scanf("%f", &bonusArma);
+
+    printf("Digite o bonus do buff: ");
+    scanf("%f", &bonusBuff);
+
+    // Cálculo do dano total
+    danoTotal = forcaBase + bonusArma + bonusBuff;
+
+    // Exibição do resultado
+    printf("Dano total: %.2f\n", danoTotal);
+
+    return 0;
+}
