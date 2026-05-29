@@ -1,0 +1,44 @@
+#include <stdio.h>
+
+// Definição da struct com typedef
+typedef struct {
+    char nome[50];
+    int hp;
+} Monstro;
+
+int main() {
+
+    int N, i;
+    int indiceMenorHP = 0;
+
+    // Leitura da quantidade de monstros
+    printf("Digite a quantidade de monstros: ");
+    scanf("%d", &N);
+
+    // Vetor de monstros
+    Monstro monstros[N];
+
+    // Leitura dos dados dos monstros
+    for (i = 0; i < N; i++) {
+
+        printf("\nMonstro %d\n", i + 1);
+
+        printf("Nome: ");
+        scanf("%s", monstros[i].nome);
+
+        printf("HP: ");
+        scanf("%d", &monstros[i].hp);
+
+        // Verifica o menor HP
+        if (monstros[i].hp < monstros[indiceMenorHP].hp) {
+            indiceMenorHP = i;
+        }
+    }
+
+    // Exibe o alvo prioritário
+    printf("\nAlvo prioritario: %s (%d HP)\n",
+           monstros[indiceMenorHP].nome,
+           monstros[indiceMenorHP].hp);
+
+    return 0;
+}
