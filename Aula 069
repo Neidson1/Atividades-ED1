@@ -1,0 +1,71 @@
+#include <stdio.h>
+
+int main() {
+    int n, m;
+
+    // Leitura da quantidade de inimigos do Portal Alfa
+    scanf("%d", &n);
+
+    int alfa[n];
+
+    // Leitura dos níveis de ameaça do Portal Alfa
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &alfa[i]);
+    }
+
+    // Leitura da quantidade de inimigos do Portal Beta
+    scanf("%d", &m);
+
+    int beta[m];
+
+    // Leitura dos níveis de ameaça do Portal Beta
+    for (int i = 0; i < m; i++) {
+        scanf("%d", &beta[i]);
+    }
+
+    // Vetor final com todos os inimigos
+    int resultado[n + m];
+
+    int i = 0, j = 0, k = 0;
+
+    // Intercalação dos vetores ordenados
+    while (i < n && j < m) {
+
+        if (alfa[i] <= beta[j]) {
+            resultado[k] = alfa[i];
+            i++;
+        } else {
+            resultado[k] = beta[j];
+            j++;
+        }
+
+        k++;
+    }
+
+    // Copia os elementos restantes do vetor alfa
+    while (i < n) {
+        resultado[k] = alfa[i];
+        i++;
+        k++;
+    }
+
+    // Copia os elementos restantes do vetor beta
+    while (j < m) {
+        resultado[k] = beta[j];
+        j++;
+        k++;
+    }
+
+    // Impressão do vetor final ordenado
+    for (int i = 0; i < n + m; i++) {
+        printf("%d", resultado[i]);
+
+        if (i < n + m - 1) {
+            printf(" ");
+        }
+    }
+
+    printf("\n");
+
+    return 0;
+}
