@@ -1,0 +1,117 @@
+#include <stdio.h>
+
+// Struct do monstro
+typedef struct {
+    int id;
+    char nome[50];
+    int hp;
+    int ataque;
+} Monstro;
+
+// Função de busca binária recursiva
+int buscaBinariaRecursiva(Monstro monstros[],
+                          int inicio,
+                          int fim,
+                          int idBusca) {
+
+    // Caso base: não encontrou
+    if (inicio > fim) {
+        return -1;
+    }
+
+    int meio = (inicio + fim) / 2;
+
+    // Encontrou o monstro
+    if (monstros[meio].id == idBusca) {
+        return meio;
+    }
+
+    // Busca na metade esquerda
+    if (idBusca < monstros[meio].id) {
+        return buscaBinariaRecursiva(
+            monstros,
+            inicio,
+            meio - 1,
+            idBusca
+        );
+    }
+
+    // Busca na metade direita
+    return buscaBinariaRecursiva(
+        monstros,
+        meio + 1,
+        fim,
+        idBusca
+    );
+}
+
+int main() {
+
+    int N, i;
+    int idBusca;
+
+    // Leitura da quantidade de monstros
+    printf("Digite a quantidade de monstros: ");
+    scanf("%d", &N);
+
+    // Vetor de monstros
+    Monstro monstros[N];
+
+    // Cadastro dos monstros
+    for (i = 0; i < N; i++) {
+
+        printf("\nMonstro %d\n", i + 1);
+
+        printf("ID: ");
+        scanf("%d", &monstros[i].id);
+
+        printf("Nome: ");
+        scanf("%s", monstros[i].nome);
+
+        printf("HP: ");
+        scanf("%d", &monstros[i].hp);
+
+        printf("Ataque: ");
+        scanf("%d", &monstros[i].ataque);
+    }
+
+    // Loop de buscas
+    do {
+
+        int indice;
+
+        printf("\nDigite o ID do monstro para buscar (0 para sair): ");
+        scanf("%d", &idBusca);
+
+        // Encerra o loop
+        if (idBusca == 0) {
+            break;
+        }
+
+        // Chama busca binária recursiva
+        indice = buscaBinariaRecursiva(
+            monstros,
+            0,
+            N - 1,
+            idBusca
+        );
+
+        // Verifica resultado
+        if (indice != -1) {
+
+            printf("Monstro Encontrado: %s (ID: %d) - HP: %d, Ataque: %d\n",
+                   monstros[indice].nome,
+                   monstros[indice].id,
+                   monstros[indice].hp,
+                   monstros[indice].ataque);
+
+        } else {
+
+            printf("Monstro com ID %d nao encontrado.\n",
+                   idBusca);
+        }
+
+    } while (1);
+
+    return 0;
+}
