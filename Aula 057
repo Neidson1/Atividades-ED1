@@ -1,0 +1,45 @@
+#include <stdio.h>
+
+// Função recursiva para contar cristais positivos
+int contarPositivos(int vetor[], int tamanho, int indice) {
+
+    // Caso base
+    if (indice == tamanho) {
+        return 0;
+    }
+
+    // Verifica se o elemento atual é positivo
+    if (vetor[indice] > 0) {
+        return 1 + contarPositivos(vetor, tamanho, indice + 1);
+    }
+
+    // Continua a recursão
+    return contarPositivos(vetor, tamanho, indice + 1);
+}
+
+int main() {
+
+    int n, i;
+
+    // Leitura da quantidade de cristais
+    printf("Digite a quantidade de cristais: ");
+    scanf("%d", &n);
+
+    int cristais[n];
+
+    // Leitura dos níveis de carga
+    for (i = 0; i < n; i++) {
+
+        printf("Carga do cristal %d: ", i + 1);
+        scanf("%d", &cristais[i]);
+    }
+
+    // Chamada da função recursiva
+    int totalPositivos = contarPositivos(cristais, n, 0);
+
+    // Exibe o resultado
+    printf("Quantidade de cristais com carga positiva: %d\n",
+           totalPositivos);
+
+    return 0;
+}
