@@ -1,0 +1,26 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+
+    // Tenta abrir o arquivo
+    FILE *arquivo = fopen("level_1_map.dat", "r");
+
+    // Verifica erro na abertura
+    if (arquivo == NULL) {
+
+        // Mensagem personalizada
+        printf("ERRO CRITICO: Nao foi possivel carregar os dados do mapa.\n");
+
+        // Mensagem detalhada do sistema
+        perror("Detalhes do erro");
+
+        // Encerra o programa com status de erro
+        exit(1);
+    }
+
+    // Fecha o arquivo caso exista
+    fclose(arquivo);
+
+    return 0;
+}
