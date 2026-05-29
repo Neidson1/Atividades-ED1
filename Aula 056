@@ -1,0 +1,31 @@
+#include <stdio.h>
+
+// Função recursiva para calcular o dano total
+int ataqueEmCascata(int nivel) {
+
+    // Caso base
+    if (nivel == 1) {
+        return 10;
+    }
+
+    // Passo recursivo
+    return 10 + ataqueEmCascata(nivel - 1);
+}
+
+int main() {
+
+    int nivel;
+    int danoTotal;
+
+    // Leitura do nível do mago
+    printf("Digite o nivel do mago: ");
+    scanf("%d", &nivel);
+
+    // Calcula o dano total
+    danoTotal = ataqueEmCascata(nivel);
+
+    // Exibe o resultado
+    printf("Dano total do Ataque em Cascata: %d\n", danoTotal);
+
+    return 0;
+}
