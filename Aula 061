@@ -1,0 +1,47 @@
+#include <stdio.h>
+
+int main() {
+
+    int N, i, j;
+    int menorIndice, temp;
+
+    // Leitura da quantidade de jogadores
+    printf("Digite a quantidade de pontuacoes: ");
+    scanf("%d", &N);
+
+    int pontuacoes[N];
+
+    // Leitura das pontuações
+    for (i = 0; i < N; i++) {
+        scanf("%d", &pontuacoes[i]);
+    }
+
+    // Ordenação por Seleção (Selection Sort)
+    for (i = 0; i < N - 1; i++) {
+
+        menorIndice = i;
+
+        for (j = i + 1; j < N; j++) {
+
+            if (pontuacoes[j] < pontuacoes[menorIndice]) {
+                menorIndice = j;
+            }
+        }
+
+        // Troca dos elementos
+        temp = pontuacoes[i];
+        pontuacoes[i] = pontuacoes[menorIndice];
+        pontuacoes[menorIndice] = temp;
+    }
+
+    // Exibição do vetor ordenado
+    printf("\nPontuacoes ordenadas:\n");
+
+    for (i = 0; i < N; i++) {
+        printf("%d ", pontuacoes[i]);
+    }
+
+    printf("\n");
+
+    return 0;
+}
