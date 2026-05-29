@@ -1,0 +1,54 @@
+ #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_NOME 100
+
+typedef struct {
+    char nome[MAX_NOME];
+    int pontuacao;
+} Jogador;
+
+int main() {
+    int n, i, indiceMaior = 0;
+
+    printf("Digite a quantidade de jogadores: ");
+    scanf("%d", &n);
+
+    Jogador jogadores[n];
+
+    for(i = 0; i < n; i++) {
+        printf("\nJogador %d\n", i + 1);
+
+        printf("Nome: ");
+        scanf(" %[^\n]", jogadores[i].nome);
+
+        printf("Pontuacao: ");
+        scanf("%d", &jogadores[i].pontuacao);
+
+        // Verifica maior pontuação
+        if(jogadores[i].pontuacao > jogadores[indiceMaior].pontuacao) {
+            indiceMaior = i;
+        }
+    }
+
+    FILE *arquivo = fopen("highscore.txt", "w");
+
+    if(arquivo == NULL) {
+        printf("Erro ao abrir o arquivo.\n");
+        return 1;
+    }
+
+    // Escreve os dados do jogador recordista no arquivo
+    fprintf(arquivo,
+            "Nome: %s, Pontuacao: %d\n",
+            jogadores[indiceMaior].nome,
+            jogadores[indiceMaior].pontuacao);
+
+    // Fecha o arquivo
+    fclose(arquivo);
+
+    printf("\nRecorde salvo com sucesso em highscore.txt\n");
+
+    return 0;
+}
