@@ -1,0 +1,42 @@
+#include <stdio.h>
+
+// Definição da struct com typedef
+typedef struct {
+    int id;
+    int pontuacao;
+} Jogador;
+
+int main() {
+    int N;
+
+    // Leitura da quantidade de jogadores
+    scanf("%d", &N);
+
+    Jogador jogadores[N];
+
+    // Leitura dos dados dos jogadores
+    for (int i = 0; i < N; i++) {
+        scanf("%d %d", &jogadores[i].id, &jogadores[i].pontuacao);
+    }
+
+    // Bubble Sort em ordem decrescente de pontuação
+    for (int i = 0; i < N - 1; i++) {
+        for (int j = 0; j < N - 1 - i; j++) {
+
+            if (jogadores[j].pontuacao < jogadores[j + 1].pontuacao) {
+
+                // Troca dos jogadores
+                Jogador temp = jogadores[j];
+                jogadores[j] = jogadores[j + 1];
+                jogadores[j + 1] = temp;
+            }
+        }
+    }
+
+    // Impressão dos jogadores ordenados
+    for (int i = 0; i < N; i++) {
+        printf("%d %d\n", jogadores[i].id, jogadores[i].pontuacao);
+    }
+
+    return 0;
+}
