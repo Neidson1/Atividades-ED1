@@ -1,0 +1,45 @@
+#include <stdio.h>
+
+// Função recursiva (Divisão e Conquista) para encontrar o maior elemento
+int encontrarMaximo(int v[], int inicio, int fim) {
+    // Caso base: apenas um elemento
+    if (inicio == fim) {
+        return v[inicio];
+    }
+
+    // Divide o problema ao meio
+    int meio = (inicio + fim) / 2;
+
+    // Conquista: resolve recursivamente as duas metades
+    int maxEsquerda = encontrarMaximo(v, inicio, meio);
+    int maxDireita  = encontrarMaximo(v, meio + 1, fim);
+
+    // Combina: retorna o maior dos dois resultados
+    if (maxEsquerda > maxDireita) {
+        return maxEsquerda;
+    } else {
+        return maxDireita;
+    }
+}
+
+int main() {
+    int N;
+
+    // Leitura da quantidade de fragmentos
+    scanf("%d", &N);
+
+    int fragmentos[N];
+
+    // Leitura dos níveis de poder
+    for (int i = 0; i < N; i++) {
+        scanf("%d", &fragmentos[i]);
+    }
+
+    // Chamada da função recursiva no vetor completo
+    int maior = encontrarMaximo(fragmentos, 0, N - 1);
+
+    // Impressão do resultado
+    printf("%d\n", maior);
+
+    return 0;
+}
