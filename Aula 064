@@ -1,0 +1,45 @@
+#include <stdio.h>
+
+int main() {
+
+    int n, i, j, chave;
+
+    // Leitura da quantidade de fragmentos
+    printf("Digite a quantidade de fragmentos: ");
+    scanf("%d", &n);
+
+    int fragmentos[n];
+
+    // Leitura dos poderes dos fragmentos
+    for (i = 0; i < n; i++) {
+        scanf("%d", &fragmentos[i]);
+    }
+
+    // Ordenação por Inserção (Insertion Sort)
+    for (i = 1; i < n; i++) {
+
+        chave = fragmentos[i];
+        j = i - 1;
+
+        // Desloca os elementos maiores para a direita
+        while (j >= 0 && fragmentos[j] > chave) {
+
+            fragmentos[j + 1] = fragmentos[j];
+            j--;
+        }
+
+        // Insere o elemento na posição correta
+        fragmentos[j + 1] = chave;
+    }
+
+    // Exibe o vetor ordenado
+    printf("\nFragmentos ordenados:\n");
+
+    for (i = 0; i < n; i++) {
+        printf("%d ", fragmentos[i]);
+    }
+
+    printf("\n");
+
+    return 0;
+}
