@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Definição da struct com typedef
+typedef struct {
+    char nome[50];
+    int vida;
+    int ataque;
+} Campeao;
+
+int main() {
+
+    Campeao equipe[3];
+    int i, indiceTanque = 0;
+
+    // Abre o arquivo em modo leitura binária
+    FILE *arquivo = fopen("squad.dat", "rb");
+
+    // Verifica se o arquivo foi aberto corretamente
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo squad.dat\n");
+        return 1;
+    }
+
+    // Lê os 3 campeões do arquivo
+    fread(equipe, sizeof(Campeao), 3, arquivo);
+
+    // Fecha o arquivo
+    fclose(arquivo);
+
+    // Procura o campeão com maior vida
+    for (i = 1; i < 3; i++) {
+
+        if (equipe[i].vida > equipe[indiceTanque].vida) {
+            indiceTanque = i;
+        }
+    }
+
+    // Exibe o tanque do esquadrão
+    printf("%s: Tanque do esquadrao.\n",
+           equipe[indiceTanque].nome);
+
+    return 0;
+}
