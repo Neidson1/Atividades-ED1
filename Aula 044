@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    int id;
+    int pontos;
+} Conquista;
+
+int main() {
+
+    FILE *arquivo;
+    int N, i;
+    int totalXP = 0;
+
+    arquivo = fopen("player_log.txt", "r+");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo.\n");
+        return 1;
+    }
+
+    // Lê a quantidade de conquistas
+    fscanf(arquivo, "%d", &N);
+
+    // Vetor de conquistas
+    Conquista conquistas[N];
+
+    // Lê as conquistas e soma os pontos
+    for (i = 0; i < N; i++) {
+        fscanf(arquivo, "%d %d",
+               &conquistas[i].id,
+               &conquistas[i].pontos);
+
+        totalXP += conquistas[i].pontos;
+    }
+
+    // Exibe o total de experiência
+    printf("Total de XP ganho na sessao: %d\n", totalXP);
+
+    // Move o ponteiro para o final do arquivo
+    fseek(arquivo, 0, SEEK_END);
+
+    // Acrescenta a mensagem final
+    fprintf(arquivo, "\n--- SESSION CONCLUDED ---");
+
+    // Fecha o arquivo
+    fclose(arquivo);
+
+    return 0;
+}
