@@ -1,0 +1,39 @@
+#include <stdio.h>
+
+int main() {
+
+    // Placar já ordenado
+    int tempos[5] = {120, 125, 130, 142, 150};
+
+    int novo_tempo;
+    int i;
+
+    // Leitura do novo tempo
+    printf("Digite o novo tempo: ");
+    scanf("%d", &novo_tempo);
+
+    // Verifica se o novo tempo entra no ranking
+    if (novo_tempo < tempos[4]) {
+
+        // Percorre de trás para frente
+        for (i = 4; i > 0 && novo_tempo < tempos[i - 1]; i--) {
+
+            // Desloca elementos para a direita
+            tempos[i] = tempos[i - 1];
+        }
+
+        // Insere o novo tempo
+        tempos[i] = novo_tempo;
+    }
+
+    // Exibe o placar atualizado
+    printf("\nPlacar atualizado:\n");
+
+    for (i = 0; i < 5; i++) {
+        printf("%d ", tempos[i]);
+    }
+
+    printf("\n");
+
+    return 0;
+}
