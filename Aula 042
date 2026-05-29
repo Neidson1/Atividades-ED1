@@ -1,0 +1,43 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Struct para armazenar as configurações
+typedef struct {
+    int resolucao_x;
+    int resolucao_y;
+    float volume_som;
+} Configuracao;
+
+int main() {
+
+    Configuracao config;
+
+    // Tenta abrir o arquivo config.txt
+    FILE *arquivo = fopen("config.txt", "r");
+
+    // Verificação de erro
+    if (arquivo == NULL) {
+        printf("Erro: Arquivo config.txt nao encontrado!\n");
+        return 1;
+    }
+
+    // Leitura dos dados do arquivo
+    fscanf(arquivo, "%d %d %f",
+           &config.resolucao_x,
+           &config.resolucao_y,
+           &config.volume_som);
+
+    // Exibição das configurações carregadas
+    printf("Configuracoes carregadas:\n");
+    printf("Resolucao: %dx%d\n",
+           config.resolucao_x,
+           config.resolucao_y);
+
+    printf("Volume: %.1f\n",
+           config.volume_som);
+
+    // Fecha o arquivo
+    fclose(arquivo);
+
+    return 0;
+}
