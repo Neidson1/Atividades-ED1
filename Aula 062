@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Definição da struct com typedef
+typedef struct {
+    char nome[50];
+    int eliminacoes;
+} Jogador;
+
+int main() {
+
+    int N, i, j;
+    int indiceMaior;
+
+    // Leitura da quantidade de jogadores
+    printf("Digite a quantidade de jogadores: ");
+    scanf("%d", &N);
+
+    // Alocação dinâmica do vetor
+    Jogador *jogadores = (Jogador *) malloc(N * sizeof(Jogador));
+
+    // Verifica se a memória foi alocada corretamente
+    if (jogadores == NULL) {
+        printf("Erro ao alocar memoria.\n");
+        return 1;
+    }
+
+    // Leitura dos dados dos jogadores
+    for (i = 0; i < N; i++) {
+
+        printf("\nJogador %d\n", i + 1);
+
+        printf("Nome: ");
+        scanf("%s", jogadores[i].nome);
+
+        printf("Eliminacoes: ");
+        scanf("%d", &jogadores[i].eliminacoes);
+    }
+
+    // Selection Sort em ordem decrescente
+    for (i = 0; i < N - 1; i++) {
+
+        indiceMaior = i;
+
+        for (j = i + 1; j < N; j++) {
+
+            if (jogadores[j].eliminacoes >
+                jogadores[indiceMaior].eliminacoes) {
+
+                indiceMaior = j;
+            }
+        }
+
+        // Troca dos jogadores
+        Jogador temp = jogadores[i];
+        jogadores[i] = jogadores[indiceMaior];
+        jogadores[indiceMaior] = temp;
+    }
+
+    // Exibe leaderboard ordenado
+    printf("\n===== LEADERBOARD =====\n");
+
+    for (i = 0; i < N; i++) {
+
+        printf("%s - %d eliminacoes\n",
+               jogadores[i].nome,
+               jogadores[i].eliminacoes);
+    }
+
+    // Libera memória
+    free(jogadores);
+
+    return 0;
+}
