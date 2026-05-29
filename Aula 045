@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Struct para armazenar os dados do personagem
+typedef struct {
+    char nome[50];
+    int nivel;
+    float vida;
+    float mana;
+} Personagem;
+
+int main() {
+
+    int opcao;
+    Personagem personagem;
+
+    // Abre o arquivo binário para escrita
+    FILE *arquivo = fopen("savegame.sav", "wb");
+
+    // Verifica se o arquivo foi aberto corretamente
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return 1;
+    }
+
+    // Menu interativo
+    do {
+
+        printf("\n===== MENU RPG =====\n");
+        printf("1 - Criar Novo Personagem\n");
+        printf("2 - Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch(opcao) {
+
+            case 1:
+
+                // Entrada dos dados do personagem
+                printf("\nNome do personagem: ");
+                scanf(" %[^\n]", personagem.nome);
+
+                printf("Nivel: ");
+                scanf("%d", &personagem.nivel);
+
+                printf("Vida: ");
+                scanf("%f", &personagem.vida);
+
+                printf("Mana: ");
+                scanf("%f", &personagem.mana);
+
+                // Escreve os dados no arquivo binário
+                fwrite(&personagem, sizeof(Personagem), 1, arquivo);
+
+                printf("\nPersonagem salvo com sucesso!\n");
+
+                break;
+
+            case 2:
+                printf("\nSaindo do programa...\n");
+                break;
+
+            default:
+                printf("\nOpcao invalida!\n");
+        }
+
+    } while(opcao != 2);
+
+    // Fecha o arquivo
+    fclose(arquivo);
+
+    return 0;
+}
