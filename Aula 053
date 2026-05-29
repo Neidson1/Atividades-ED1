@@ -1,0 +1,22 @@
+#include <stdio.h>
+
+int main() {
+
+    int energia;
+
+    // Leitura da energia inicial
+    printf("Digite a energia inicial do Golem: ");
+    scanf("%d", &energia);
+
+    // Laço logarítmico
+    while (energia > 1) {
+
+        // Exibe a energia atual
+        printf("%d\n", energia);
+
+        // Reduz a energia pela metade
+        energia = energia / 2;
+    }
+
+    return 0;
+}
