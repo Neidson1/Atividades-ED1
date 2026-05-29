@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Definição da struct com typedef
+typedef struct {
+    char nome[50];
+    int vida;
+    int ataque;
+} Unidade;
+
+int main() {
+
+    int n, i, indiceMaiorATK = 0;
+
+    // Lê a quantidade de unidades
+    printf("Quantidade de unidades: ");
+    scanf("%d", &n);
+
+    // Alocação dinâmica do vetor
+    Unidade *esquadrao = (Unidade *) malloc(n * sizeof(Unidade));
+
+    // Verifica se a memória foi alocada corretamente
+    if (esquadrao == NULL) {
+        printf("Erro ao alocar memoria.\n");
+        return 1;
+    }
+
+    // Leitura dos dados das unidades
+    for (i = 0; i < n; i++) {
+
+        printf("\nUnidade %d\n", i + 1);
+
+        printf("Nome: ");
+        scanf("%s", esquadrao[i].nome);
+
+        printf("HP: ");
+        scanf("%d", &esquadrao[i].vida);
+
+        printf("ATK: ");
+        scanf("%d", &esquadrao[i].ataque);
+
+        // Verifica maior ATK
+        if (esquadrao[i].ataque > esquadrao[indiceMaiorATK].ataque) {
+            indiceMaiorATK = i;
+        }
+    }
+
+    // Abre o arquivo binário
+    FILE *arquivo = fopen("squad.dat", "wb");
+
+    // Verifica abertura do arquivo
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo.\n");
+        free(esquadrao);
+        return 1;
+    }
+
+    // Escreve o vetor inteiro no arquivo
+    fwrite(esquadrao, sizeof(Unidade), n, arquivo);
+
+    // Fecha o arquivo
+    fclose(arquivo);
+
+    // Exibe unidade com maior ATK
+    printf("\nUnidade com maior ATK: %s\n",
+           esquadrao[indiceMaiorATK].nome);
+
+    // Libera memória
+    free(esquadrao);
+
+    return 0;
+}
