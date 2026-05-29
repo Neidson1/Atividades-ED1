@@ -1,0 +1,115 @@
+#include <stdio.h>
+
+// Struct para armazenar os dados do personagem
+typedef struct {
+    int id;
+    char nome[50];
+    float forca;
+    float agilidade;
+    float inteligencia;
+} Personagem;
+
+// Função de busca linear
+int buscarPersonagem(Personagem vetor[], int tamanho, int idBusca) {
+
+    int i;
+
+    for (i = 0; i < tamanho; i++) {
+
+        if (vetor[i].id == idBusca) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+int main() {
+
+    int n, i;
+    int opcao, idBusca, indice;
+
+    // Leitura da quantidade de personagens
+    printf("Digite a quantidade de personagens: ");
+    scanf("%d", &n);
+
+    // Vetor de personagens
+    Personagem personagens[n];
+
+    // Cadastro dos personagens
+    for (i = 0; i < n; i++) {
+
+        printf("\nPersonagem %d\n", i + 1);
+
+        printf("ID: ");
+        scanf("%d", &personagens[i].id);
+
+        printf("Nome: ");
+        scanf("%s", personagens[i].nome);
+
+        printf("Forca: ");
+        scanf("%f", &personagens[i].forca);
+
+        printf("Agilidade: ");
+        scanf("%f", &personagens[i].agilidade);
+
+        printf("Inteligencia: ");
+        scanf("%f", &personagens[i].inteligencia);
+    }
+
+    // Menu de consultas
+    do {
+
+        printf("\n===== MENU =====\n");
+        printf("1 - Consultar Personagem\n");
+        printf("2 - Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch(opcao) {
+
+            case 1: {
+
+                float media;
+
+                printf("\nDigite a ID do personagem: ");
+                scanf("%d", &idBusca);
+
+                // Busca do personagem
+                indice = buscarPersonagem(personagens, n, idBusca);
+
+                if (indice != -1) {
+
+                    // Calcula média dos atributos
+                    media =
+                        (personagens[indice].forca +
+                         personagens[indice].agilidade +
+                         personagens[indice].inteligencia) / 3.0;
+
+                    // Exibe os dados
+                    printf("\nNome: %s\n",
+                           personagens[indice].nome);
+
+                    printf("Media de Atributos: %.2f\n",
+                           media);
+
+                } else {
+
+                    printf("\nPersonagem nao existe.\n");
+                }
+
+                break;
+            }
+
+            case 2:
+                printf("\nPrograma encerrado.\n");
+                break;
+
+            default:
+                printf("\nOpcao invalida.\n");
+        }
+
+    } while(opcao != 2);
+
+    return 0;
+}
