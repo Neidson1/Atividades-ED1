@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+// Função para trocar elementos
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+// Partição com pivô aleatório (Lomuto adaptado)
+int particiona(int v[], int inicio, int fim) {
+    int randomIndex = inicio + rand() % (fim - inicio + 1);
+
+    // Coloca o pivô aleatório no final
+    swap(&v[randomIndex], &v[fim]);
+
+    int pivot = v[fim];
+    int i = inicio - 1;
+
+    for (int j = inicio; j < fim; j++) {
+        if (v[j] <= pivot) {
+            i++;
+            swap(&v[i], &v[j]);
+        }
+    }
+
+    swap(&v[i + 1], &v[fim]);
+    return i + 1;
+}
+
+// Quick Sort recursivo
+void quickSort(int v[], int inicio, int fim) {
+    if (inicio < fim) {
+        int p = particiona(v, inicio, fim);
+
+        quickSort(v, inicio, p - 1);
+        quickSort(v, p + 1, fim);
+    }
+}
+
+int main() {
+    int N;
+
+    scanf("%d", &N);
+
+    int v[N];
+
+    for (int i = 0; i < N; i++) {
+        scanf("%d", &v[i]);
+    }
+
+    // Inicializa gerador de números aleatórios
+    srand(time(NULL));
+
+    quickSort(v, 0, N - 1);
+
+    for (int i = 0; i < N; i++) {
+        printf("%d", v[i]);
+        if (i < N - 1) printf(" ");
+    }
+
+    printf("\n");
+
+    return 0;
+}
