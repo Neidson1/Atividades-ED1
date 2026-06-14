@@ -1,0 +1,310 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <time.h>
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+
+#define LARGURA 800
+#define ALTURA 600
+
+#define TAM_BLOCO 40
+
+typedef enum{
+    MENU,
+    JOGANDO,
+    GAME_OVER
+}EstadoJogo;
+
+typedef struct{
+    float x;
+    float y;
+}Posicao;
+
+typedef struct{
+    Posicao pos;
+    int vidas;
+    int pontos;
+    char nome[30];
+}Jogador;
+
+typedef struct{
+    Posicao pos;
+    int coletada;
+}Moeda;
+
+typedef struct{
+    Posicao pos;
+    float velocidade;
+    int ativo;
+}Inimigo;
+
+void moverJogador(Jogador *j, bool tecla[])
+{
+    if(tecla[ALLEGRO_KEY_W])
+        j->pos.y -= 4;
+
+    if(tecla[ALLEGRO_KEY_S])
+        j->pos.y += 4;
+
+    if(tecla[ALLEGRO_KEY_A])
+        j->pos.x -= 4;
+
+    if(tecla[ALLEGRO_KEY_D])
+        j->pos.x += 4;
+
+    if(j->pos.x < 0)
+        j->pos.x = 0;
+
+    if(j->pos.x > LARGURA-30)
+        j->pos.x = LARGURA-30;
+
+    if(j->pos.y < 0)
+        j->pos.y = 0;
+
+    if(j->pos.y > ALTURA-30)
+        j->pos.y = ALTURA-30;
+}
+
+void moverInimigos(Inimigo *inimigos, int quantidade)
+{
+    for(int i=0;i<quantidade;i++)
+    {
+        if(inimigos[i].ativo)
+        {
+            inimigos[i].pos.y += inimigos[i].velocidade;
+
+            if(inimigos[i].pos.y > ALTURA)
+            {
+                inimigos[i].pos.y = 0;
+                inimigos[i].pos.x = rand()%LARGURA;
+            }
+        }
+    }
+}
+
+void verificarColisaoMoedas(Jogador *j, Moeda *moedas, int quantidade)
+{
+    for(int i=0;i<quantidade;i++)
+    {
+        if(!moedas[i].coletada)
+        {
+            if(abs(j->pos.x - moedas[i].pos.x) < 25 &&
+               abs(j->pos.y - moedas[i].pos.y) < 25)
+            {
+                moedas[i].coletada = 1;
+                j->pontos += 10;
+            }
+        }
+    }
+}
+
+void verificarColisaoInimigos(Jogador *j, Inimigo *inimigos,
+                              int quantidade, EstadoJogo *estado)
+{
+    for(int i=0;i<quantidade;i++)
+    {
+        if(abs(j->pos.x - inimigos[i].pos.x) < 25 &&
+           abs(j->pos.y - inimigos[i].pos.y) < 25)
+        {
+            *estado = GAME_OVER;
+        }
+    }
+}
+
+int main()
+{
+    srand(time(NULL));
+
+    al_init();
+    al_init_primitives_addon();
+    al_install_keyboard();
+
+    ALLEGRO_DISPLAY *janela =
+        al_create_display(LARGURA,ALTURA);
+
+    ALLEGRO_EVENT_QUEUE *fila =
+        al_create_event_queue();
+
+    ALLEGRO_TIMER *timer =
+        al_create_timer(1.0/60);
+
+    al_register_event_source(fila,
+            al_get_display_event_source(janela));
+
+    al_register_event_source(fila,
+            al_get_keyboard_event_source());
+
+    al_register_event_source(fila,
+            al_get_timer_event_source(timer));
+
+    Jogador jogador;
+
+    strcpy(jogador.nome,"Neidson");
+
+    char mensagem[100]="Bem vindo ";
+    strcat(mensagem,jogador.nome);
+
+    printf("%s\n",mensagem);
+
+    printf("Tamanho do nome: %d\n",
+           strlen(jogador.nome));
+
+    if(strcmp(jogador.nome,"Neidson")==0)
+        printf("Nome reconhecido!\n");
+
+    jogador.pos.x = 400;
+    jogador.pos.y = 500;
+    jogador.vidas = 3;
+    jogador.pontos = 0;
+
+    int quantidadeMoedas = 10;
+
+    Moeda *moedas =
+        malloc(quantidadeMoedas*sizeof(Moeda));
+
+    for(int i=0;i<quantidadeMoedas;i++)
+    {
+        moedas[i].pos.x = rand()%LARGURA;
+        moedas[i].pos.y = rand()%ALTURA;
+        moedas[i].coletada = 0;
+    }
+
+    int quantidadeInimigos = 3;
+
+    Inimigo *inimigos =
+        malloc(quantidadeInimigos*sizeof(Inimigo));
+
+    for(int i=0;i<quantidadeInimigos;i++)
+    {
+        inimigos[i].pos.x = rand()%LARGURA;
+        inimigos[i].pos.y = rand()%200;
+
+        inimigos[i].velocidade = 2 + rand()%3;
+        inimigos[i].ativo = 1;
+    }
+
+    int mapa[5][5]={
+        {1,1,1,1,1},
+        {1,0,0,0,1},
+        {1,0,0,0,1},
+        {1,0,0,0,1},
+        {1,1,1,1,1}
+    };
+
+    bool tecla[ALLEGRO_KEY_MAX]={false};
+
+    EstadoJogo estado = JOGANDO;
+
+    bool executando = true;
+
+    al_start_timer(timer);
+
+    while(executando)
+    {
+        ALLEGRO_EVENT evento;
+
+        al_wait_for_event(fila,&evento);
+
+        if(evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+            executando = false;
+
+        if(evento.type == ALLEGRO_EVENT_KEY_DOWN)
+            tecla[evento.keyboard.keycode]=true;
+
+        if(evento.type == ALLEGRO_EVENT_KEY_UP)
+            tecla[evento.keyboard.keycode]=false;
+
+        if(evento.type == ALLEGRO_EVENT_TIMER)
+        {
+            if(estado == JOGANDO)
+            {
+                moverJogador(&jogador,tecla);
+
+                moverInimigos(inimigos,
+                              quantidadeInimigos);
+
+                verificarColisaoMoedas(&jogador,
+                                       moedas,
+                                       quantidadeMoedas);
+
+                verificarColisaoInimigos(&jogador,
+                                         inimigos,
+                                         quantidadeInimigos,
+                                         &estado);
+
+                if(jogador.pontos >= 50)
+                {
+                    quantidadeInimigos++;
+
+                    inimigos = realloc(inimigos,
+                          quantidadeInimigos*sizeof(Inimigo));
+
+                    inimigos[quantidadeInimigos-1].pos.x =
+                        rand()%LARGURA;
+
+                    inimigos[quantidadeInimigos-1].pos.y = 0;
+
+                    inimigos[quantidadeInimigos-1].velocidade =
+                        4;
+
+                    inimigos[quantidadeInimigos-1].ativo = 1;
+
+                    jogador.pontos = -1000;
+                }
+            }
+
+            al_clear_to_color(al_map_rgb(0,0,0));
+
+            if(estado == JOGANDO)
+            {
+                al_draw_filled_rectangle(
+                        jogador.pos.x,
+                        jogador.pos.y,
+                        jogador.pos.x+30,
+                        jogador.pos.y+30,
+                        al_map_rgb(0,0,255));
+
+                for(int i=0;i<quantidadeMoedas;i++)
+                {
+                    if(!moedas[i].coletada)
+                    {
+                        al_draw_filled_circle(
+                                moedas[i].pos.x,
+                                moedas[i].pos.y,
+                                10,
+                                al_map_rgb(255,255,0));
+                    }
+                }
+
+                for(int i=0;i<quantidadeInimigos;i++)
+                {
+                    al_draw_filled_rectangle(
+                            inimigos[i].pos.x,
+                            inimigos[i].pos.y,
+                            inimigos[i].pos.x+25,
+                            inimigos[i].pos.y+25,
+                            al_map_rgb(255,0,0));
+                }
+            }
+
+            if(estado == GAME_OVER)
+            {
+                al_clear_to_color(al_map_rgb(80,0,0));
+            }
+
+            al_flip_display();
+        }
+    }
+
+    free(moedas);
+    free(inimigos);
+
+    al_destroy_timer(timer);
+    al_destroy_event_queue(fila);
+    al_destroy_display(janela);
+
+    return 0;
+}
