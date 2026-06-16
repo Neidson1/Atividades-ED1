@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct
+{
+    int id;
+    char nome[50];
+} Movimento;
+
+typedef struct No
+{
+    Movimento movimento;
+    struct No *prox;
+} No;
+
+typedef struct
+{
+    No *inicio;
+} Lista;
+
+void inserir_inicio(Lista *lista, Movimento mov)
+{
+    No *novo = (No *)malloc(sizeof(No));
+
+    if (novo == NULL)
+    {
+        printf("Erro ao alocar memoria.\n");
+        return;
+    }
+
+    novo->movimento = mov;
+    novo->prox = lista->inicio;
+    lista->inicio = novo;
+}
+
+int main()
+{
+    Lista combo;
+    combo.inicio = NULL;
+
+    int opcao;
+    Movimento mov;
+
+    do
+    {
+        printf("\n=== MENU ===\n");
+        printf("1 - Inserir novo movimento\n");
+        printf("2 - Sair\n");
+        printf("Opcao: ");
+        scanf("%d", &opcao);
+
+        if (opcao == 1)
+        {
+            printf("ID do movimento: ");
+            scanf("%d", &mov.id);
+
+            printf("Nome do movimento: ");
+            scanf(" %49[^\n]", mov.nome);
+
+            inserir_inicio(&combo, mov);
+
+            printf("Movimento inserido com sucesso!\n");
+        }
+        else if (opcao != 2)
+        {
+            printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 2);
+
+    return 0;
+}
