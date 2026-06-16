@@ -1,0 +1,303 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <time.h>
+#include <math.h>
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
+
+#define LARGURA 800
+#define ALTURA 600
+
+typedef enum {
+    MENU,
+    JOGANDO,
+    GAME_OVER
+} EstadoJogo;
+
+typedef struct {
+    float x;
+    float y;
+} Posicao;
+
+typedef struct {
+    Posicao pos;
+    int vidas;
+    int pontos;
+    char nome[30];
+} Jogador;
+
+typedef struct {
+    Posicao pos;
+    int coletada;
+} Moeda;
+
+typedef struct {
+    Posicao pos;
+    float velocidade;
+    int ativo;
+} Inimigo;
+
+typedef struct {
+    Posicao pos;
+    int ativo;
+} PowerUp;
+
+// Reseta o estado do jogo para reiniciar com a tecla R
+void reiniciarJogo(Jogador *j, Moeda *moedas, int qtdMoedas, Inimigo *inimigos, int qtdInimigos, PowerUp *p, int *fase) {
+    j->pos.x = 400;
+    j->pos.y = 500;
+    j->vidas = 3;
+    j->pontos = 0;
+    *fase = 1;
+
+    for (int i = 0; i < qtdMoedas; i++) {
+        moedas[i].pos.x = 40 + rand() % (LARGURA - 80);
+        moedas[i].pos.y = 40 + rand() % (ALTURA - 80);
+        moedas[i].coletada = 0;
+    }
+
+    for (int i = 0; i < qtdInimigos; i++) {
+        inimigos[i].pos.x = rand() % (LARGURA - 25);
+        inimigos[i].pos.y = rand() % 200;
+        inimigos[i].velocidade = 2.0f;
+        inimigos[i].ativo = 1;
+    }
+
+    p->pos.x = 40 + rand() % (LARGURA - 80);
+    p->pos.y = 40 + rand() % (ALTURA - 80);
+    p->ativo = 1;
+}
+
+void moverJogador(Jogador *j, bool tecla[]) {
+    if (tecla[ALLEGRO_KEY_W]) j->pos.y -= 4;
+    if (tecla[ALLEGRO_KEY_S]) j->pos.y += 4;
+    if (tecla[ALLEGRO_KEY_A]) j->pos.x -= 4;
+    if (tecla[ALLEGRO_KEY_D]) j->pos.x += 4;
+
+    if (j->pos.x < 0) j->pos.x = 0;
+    if (j->pos.x > LARGURA - 30) j->pos.x = LARGURA - 30;
+    if (j->pos.y < 0) j->pos.y = 0;
+    if (j->pos.y > ALTURA - 30) j->pos.y = ALTURA - 30;
+}
+
+// IA DE PERSEGUIÇÃO: Inimigos agora calculam a rota até o jogador
+void moverInimigos(Inimigo *inimigos, int quantidade, Jogador *j) {
+    for (int i = 0; i < quantidade; i++) {
+        if (inimigos[i].ativo) {
+            float dx = j->pos.x - inimigos[i].pos.x;
+            float dy = j->pos.y - inimigos[i].pos.y;
+            float distancia = sqrt(dx * dx + dy * dy);
+
+            if (distancia > 0) {
+                inimigos[i].pos.x += (dx / distancia) * inimigos[i].velocidade;
+                inimigos[i].pos.y += (dy / distancia) * inimigos[i].velocidade;
+            }
+        }
+    }
+}
+
+void verificarColisaoMoedas(Jogador *j, Moeda *moedas, int quantidade) {
+    for (int i = 0; i < quantidade; i++) {
+        if (!moedas[i].coletada) {
+            if (j->pos.x < moedas[i].pos.x + 10 && j->pos.x + 30 > moedas[i].pos.x - 10 &&
+                j->pos.y < moedas[i].pos.y + 10 && j->pos.y + 30 > moedas[i].pos.y - 10) {
+                moedas[i].coletada = 1;
+                j->pontos += 10;
+            }
+        }
+    }
+}
+
+void verificarColisaoInimigos(Jogador *j, Inimigo *inimigos, int quantidade, EstadoJogo *estado) {
+    for (int i = 0; i < quantidade; i++) {
+        if (inimigos[i].ativo) {
+            if (j->pos.x < inimigos[i].pos.x + 25 && j->pos.x + 30 > inimigos[i].pos.x &&
+                j->pos.y < inimigos[i].pos.y + 25 && j->pos.y + 30 > inimigos[i].pos.y) {
+                
+                j->vidas--;
+                inimigos[i].pos.x = rand() % (LARGURA - 25);
+                inimigos[i].pos.y = 0;
+
+                if (j->vidas <= 0) {
+                    *estado = GAME_OVER;
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    srand(time(NULL));
+
+    if (!al_init()) return -1;
+    al_init_primitives_addon();
+    al_install_keyboard();
+    al_init_font_addon();
+
+    al_set_new_display_flags(ALLEGRO_WINDOWED | ALLEGRO_CONSERVATIVE_RASTERIZATION);
+
+    ALLEGRO_FONT *fonte = al_create_builtin_font();
+    ALLEGRO_DISPLAY *janela = al_create_display(LARGURA, ALTURA);
+    ALLEGRO_EVENT_QUEUE *fila = al_create_event_queue();
+    ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60);
+
+    if (!janela || !fila || !timer || !fonte) return -1;
+
+    al_register_event_source(fila, al_get_display_event_source(janela));
+    al_register_event_source(fila, al_get_keyboard_event_source());
+    al_register_event_source(fila, al_get_timer_event_source(timer));
+
+    Jogador jogador;
+    strcpy(jogador.nome, "Neidson");
+
+    jogador.pos.x = 400;
+    jogador.pos.y = 500;
+    jogador.vidas = 3;
+    jogador.pontos = 0;
+
+    int fase = 1;
+    int quantidadeMoedas = 10;
+    Moeda *moedas = malloc(quantidadeMoedas * sizeof(Moeda));
+    for (int i = 0; i < quantidadeMoedas; i++) {
+        moedas[i].pos.x = 40 + rand() % (LARGURA - 80);
+        moedas[i].pos.y = 40 + rand() % (ALTURA - 80);
+        moedas[i].coletada = 0;
+    }
+
+    int quantidadeInimigos = 3;
+    Inimigo *inimigos = malloc(quantidadeInimigos * sizeof(Inimigo));
+    for (int i = 0; i < quantidadeInimigos; i++) {
+        inimigos[i].pos.x = rand() % (LARGURA - 25);
+        inimigos[i].pos.y = rand() % 200;
+        inimigos[i].velocidade = 1.5f;
+        inimigos[i].ativo = 1;
+    }
+
+    PowerUp vidaExtra;
+    vidaExtra.pos.x = 40 + rand() % (LARGURA - 80);
+    vidaExtra.pos.y = 40 + rand() % (ALTURA - 80);
+    vidaExtra.ativo = 1;
+
+    bool tecla[ALLEGRO_KEY_MAX] = {false};
+    EstadoJogo estado = JOGANDO;
+    bool executando = true;
+    bool redesenhar = true;
+
+    al_start_timer(timer);
+
+    while (executando) {
+        ALLEGRO_EVENT evento;
+        al_wait_for_event(fila, &evento);
+
+        if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE)
+            executando = false;
+
+        if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+            tecla[evento.keyboard.keycode] = true;
+            
+            // Se estiver em Game Over, pressionar R reinicia o jogo de forma limpa
+            if (estado == GAME_OVER && evento.keyboard.keycode == ALLEGRO_KEY_R) {
+                reiniciarJogo(&jogador, moedas, quantidadeMoedas, inimigos, quantidadeInimigos, &vidaExtra, &fase);
+                estado = JOGANDO;
+            }
+        }
+
+        if (evento.type == ALLEGRO_EVENT_KEY_UP)
+            tecla[evento.keyboard.keycode] = false;
+
+        if (evento.type == ALLEGRO_EVENT_TIMER) {
+            if (estado == JOGANDO) {
+                moverJogador(&jogador, tecla);
+                moverInimigos(inimigos, quantidadeInimigos, &jogador);
+                verificarColisaoMoedas(&jogador, moedas, quantidadeMoedas);
+                verificarColisaoInimigos(&jogador, inimigos, quantidadeInimigos, &estado);
+
+                if (vidaExtra.ativo &&
+                    jogador.pos.x < vidaExtra.pos.x + 12 && jogador.pos.x + 30 > vidaExtra.pos.x - 12 &&
+                    jogador.pos.y < vidaExtra.pos.y + 12 && jogador.pos.y + 30 > vidaExtra.pos.y - 12) {
+                    jogador.vidas++;
+                    vidaExtra.ativo = 0;
+                }
+
+                // Evolução de fase dinâmica
+                if (jogador.pontos >= fase * 100) {
+                    fase++;
+                    quantidadeInimigos++;
+                    inimigos = realloc(inimigos, quantidadeInimigos * sizeof(Inimigo));
+                    inimigos[quantidadeInimigos - 1].pos.x = rand() % (LARGURA - 25);
+                    inimigos[quantidadeInimigos - 1].pos.y = 0;
+                    inimigos[quantidadeInimigos - 1].velocidade = 1.5f + (fase * 0.2f);
+                    inimigos[quantidadeInimigos - 1].ativo = 1;
+
+                    for (int i = 0; i < quantidadeMoedas; i++) {
+                        moedas[i].pos.x = 40 + rand() % (LARGURA - 80);
+                        moedas[i].pos.y = 40 + rand() % (ALTURA - 80);
+                        moedas[i].coletada = 0;
+                    }
+                }
+            }
+            redesenhar = true;
+        }
+
+        if (redesenhar && al_is_event_queue_empty(fila)) {
+            redesenhar = false;
+
+            if (estado == JOGANDO) {
+                al_clear_to_color(al_map_rgb(0, 40, 0)); 
+
+                if (vidaExtra.ativo) {
+                    al_draw_filled_circle(vidaExtra.pos.x, vidaExtra.pos.y, 12, al_map_rgb(0, 255, 0));
+                }
+
+                for (int i = 0; i < quantidadeMoedas; i++) {
+                    if (!moedas[i].coletada) {
+                        al_draw_filled_circle(moedas[i].pos.x, moedas[i].pos.y, 10, al_map_rgb(255, 255, 0));
+                    }
+                }
+
+                for (int i = 0; i < quantidadeInimigos; i++) {
+                    if (inimigos[i].ativo) {
+                        al_draw_filled_rectangle(inimigos[i].pos.x, inimigos[i].pos.y,
+                                                 inimigos[i].pos.x + 25, inimigos[i].pos.y + 25,
+                                                 al_map_rgb(255, 0, 0));
+                    }
+                }
+
+                al_draw_filled_rectangle(jogador.pos.x, jogador.pos.y,
+                                         jogador.pos.x + 30, jogador.pos.y + 30,
+                                         al_map_rgb(0, 0, 255));
+
+                char hud[100];
+                sprintf(hud, "Pontos: %d  Vidas: %d  Fase: %d", jogador.pontos, jogador.vidas, fase);
+                al_draw_text(fonte, al_map_rgb(255, 255, 255), 15, 15, 0, hud);
+            } 
+            else if (estado == GAME_OVER) {
+                al_clear_to_color(al_map_rgb(120, 0, 0)); 
+                al_draw_text(fonte, al_map_rgb(255, 255, 255), LARGURA/2 - 50, ALTURA/2 - 20, 0, "GAME OVER");
+                al_draw_text(fonte, al_map_rgb(255, 255, 255), LARGURA/2 - 110, ALTURA/2 + 10, 0, "Pressione 'R' para Reiniciar");
+            }
+
+            al_flip_display();
+        }
+    }
+
+    FILE *arquivo = fopen("ranking.txt", "a");
+    if (arquivo) {
+        fprintf(arquivo, "%s %d\n", jogador.nome, jogador.pontos);
+        fclose(arquivo);
+    }
+
+    free(moedas);
+    free(inimigos);
+
+    al_destroy_font(fonte);
+    al_destroy_timer(timer);
+    al_destroy_event_queue(fila);
+    al_destroy_display(janela);
+
+    return 0;
+}
