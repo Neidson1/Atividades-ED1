@@ -1,0 +1,228 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct
+{
+    int id;
+    char nome[50];
+} Item;
+
+
+typedef struct No
+{
+    Item item;
+    struct No *prox;
+} No;
+
+
+typedef struct
+{
+    No *inicio;
+} Lista;
+
+
+void inserir_inicio(Lista *lista, Item item)
+{
+    No *novo = (No*) malloc(sizeof(No));
+
+    novo->item = item;
+    novo->prox = lista->inicio;
+    lista->inicio = novo;
+}
+
+
+void inserir_fim(Lista *lista, Item item)
+{
+    No *novo = (No*) malloc(sizeof(No));
+
+    novo->item = item;
+    novo->prox = NULL;
+
+
+    if(lista->inicio == NULL)
+    {
+        lista->inicio = novo;
+    }
+    else
+    {
+        No *aux = lista->inicio;
+
+        while(aux->prox != NULL)
+        {
+            aux = aux->prox;
+        }
+
+        aux->prox = novo;
+    }
+}
+
+
+void inserir_apos_id(Lista *lista, Item item, int id)
+{
+    No *aux = lista->inicio;
+
+
+    while(aux != NULL && aux->item.id != id)
+    {
+        aux = aux->prox;
+    }
+
+
+    if(aux == NULL)
+    {
+        printf("Fragmento nao encontrado. Insercao cancelada!\n");
+        return;
+    }
+
+
+    No *novo = (No*) malloc(sizeof(No));
+
+    novo->item = item;
+    novo->prox = aux->prox;
+    aux->prox = novo;
+
+
+    printf("Catalisador inserido com sucesso!\n");
+}
+
+
+void mostrar_inventario(Lista *lista)
+{
+    No *aux = lista->inicio;
+
+
+    if(aux == NULL)
+    {
+        printf("\nInventario vazio!\n");
+        return;
+    }
+
+
+    printf("\n=== INVENTARIO ===\n");
+
+
+    while(aux != NULL)
+    {
+        printf("ID: %d | Item: %s\n",
+               aux->item.id,
+               aux->item.nome);
+
+        aux = aux->prox;
+    }
+}
+
+
+
+int main()
+{
+    Lista inventario;
+    inventario.inicio = NULL;
+
+
+    int opcao;
+    Item item;
+    int id_fragmento;
+
+
+    do
+    {
+
+        printf("\n=== MENU ===\n");
+        printf("1 - Inserir item no inicio\n");
+        printf("2 - Inserir item no fim\n");
+        printf("3 - Inserir catalisador apos fragmento\n");
+        printf("4 - Mostrar inventario\n");
+        printf("5 - Sair\n");
+        printf("Opcao: ");
+
+        scanf("%d", &opcao);
+
+
+
+        switch(opcao)
+        {
+
+
+        case 1:
+
+            printf("ID: ");
+            scanf("%d", &item.id);
+
+            printf("Nome: ");
+            scanf(" %49[^\n]", item.nome);
+
+
+            inserir_inicio(&inventario, item);
+
+            printf("Item inserido!\n");
+
+            break;
+
+
+
+        case 2:
+
+            printf("ID: ");
+            scanf("%d", &item.id);
+
+            printf("Nome: ");
+            scanf(" %49[^\n]", item.nome);
+
+
+            inserir_fim(&inventario, item);
+
+            printf("Item inserido!\n");
+
+            break;
+
+
+
+        case 3:
+
+            printf("\nDados do Catalisador:\n");
+
+            printf("ID: ");
+            scanf("%d", &item.id);
+
+            printf("Nome: ");
+            scanf(" %49[^\n]", item.nome);
+
+
+            printf("Inserir apos o ID do Fragmento: ");
+            scanf("%d", &id_fragmento);
+
+
+            inserir_apos_id(&inventario, item, id_fragmento);
+
+            break;
+
+
+
+        case 4:
+
+            mostrar_inventario(&inventario);
+
+            break;
+
+
+
+        case 5:
+
+            printf("Encerrando programa...\n");
+
+            break;
+
+
+
+        default:
+
+            printf("Opcao invalida!\n");
+
+        }
+
+
+    } while(opcao != 5);
+
+
+    return 0;
+}
