@@ -1,0 +1,177 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct
+{
+    int id;
+    char nome[50];
+} Heroi;
+
+typedef struct No
+{
+    Heroi heroi;
+    struct No *prox;
+} No;
+
+typedef struct
+{
+    No *inicio;
+} Lista;
+
+void inserir_fim(Lista *lista, Heroi heroi)
+{
+    No *novo = (No *)malloc(sizeof(No));
+
+    novo->heroi = heroi;
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL)
+    {
+        lista->inicio = novo;
+        return;
+    }
+
+    No *aux = lista->inicio;
+
+    while (aux->prox != NULL)
+    {
+        aux = aux->prox;
+    }
+
+    aux->prox = novo;
+}
+
+void inserir_antes(Lista *lista, Heroi guarda, int id_vip)
+{
+    No *novo = (No *)malloc(sizeof(No));
+
+    novo->heroi = guarda;
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL)
+    {
+        printf("Formacao vazia! Insercao nao realizada.\n");
+        free(novo);
+        return;
+    }
+
+    
+    if (lista->inicio->heroi.id == id_vip)
+    {
+        novo->prox = lista->inicio;
+        lista->inicio = novo;
+        printf("Guarda-costas inserido com sucesso!\n");
+        return;
+    }
+
+    No *anterior = lista->inicio;
+    No *atual = lista->inicio->prox;
+
+    while (atual != NULL && atual->heroi.id != id_vip)
+    {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    if (atual == NULL)
+    {
+        printf("VIP nao encontrado! Insercao nao realizada.\n");
+        free(novo);
+        return;
+    }
+
+    novo->prox = atual;
+    anterior->prox = novo;
+
+    printf("Guarda-costas inserido com sucesso!\n");
+}
+
+void mostrar_formacao(Lista *lista)
+{
+    No *aux = lista->inicio;
+
+    if (aux == NULL)
+    {
+        printf("\nFormacao vazia!\n");
+        return;
+    }
+
+    printf("\n=== FORMACAO DE BATALHA ===\n");
+
+    while (aux != NULL)
+    {
+        printf("ID: %d | Nome: %s\n",
+               aux->heroi.id,
+               aux->heroi.nome);
+
+        aux = aux->prox;
+    }
+}
+
+int main()
+{
+    Lista formacao;
+    formacao.inicio = NULL;
+
+    int opcao;
+    int id_vip;
+    Heroi heroi;
+
+    do
+    {
+        printf("\n=== MENU ===\n");
+        printf("1 - Adicionar Heroi no Fim da Formacao\n");
+        printf("2 - Adicionar Guarda-Costas (Inserir Antes)\n");
+        printf("3 - Mostrar Formacao\n");
+        printf("4 - Sair\n");
+        printf("Opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao)
+        {
+        case 1:
+
+            printf("ID do Heroi: ");
+            scanf("%d", &heroi.id);
+
+            printf("Nome do Heroi: ");
+            scanf(" %49[^\n]", heroi.nome);
+
+            inserir_fim(&formacao, heroi);
+
+            printf("Heroi adicionado com sucesso!\n");
+            break;
+
+        case 2:
+
+            printf("ID do Guarda-Costas: ");
+            scanf("%d", &heroi.id);
+
+            printf("Nome do Guarda-Costas: ");
+            scanf(" %49[^\n]", heroi.nome);
+
+            printf("ID do VIP: ");
+            scanf("%d", &id_vip);
+
+            inserir_antes(&formacao, heroi, id_vip);
+            break;
+
+        case 3:
+
+            mostrar_formacao(&formacao);
+            break;
+
+        case 4:
+
+            printf("Encerrando programa...\n");
+            break;
+
+        default:
+
+            printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 4);
+
+    return 0;
+}
