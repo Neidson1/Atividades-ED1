@@ -1,0 +1,181 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct
+{
+    int id;
+    char descricao[100];
+} Etapa;
+
+typedef struct No
+{
+    Etapa etapa;
+    struct No *prox;
+} No;
+
+typedef struct
+{
+    No *inicio;
+} Lista;
+
+void inserir_fim(Lista *lista, Etapa etapa)
+{
+    No *novo = (No *)malloc(sizeof(No));
+
+    novo->etapa = etapa;
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL)
+    {
+        lista->inicio = novo;
+        return;
+    }
+
+    No *aux = lista->inicio;
+
+    while (aux->prox != NULL)
+    {
+        aux = aux->prox;
+    }
+
+    aux->prox = novo;
+}
+
+void mostrar_etapas(Lista *lista)
+{
+    No *aux = lista->inicio;
+
+    if (aux == NULL)
+    {
+        printf("Nenhuma etapa cadastrada!\n");
+        return;
+    }
+
+    printf("\n=== ETAPAS DA MISSAO ===\n");
+
+    while (aux != NULL)
+    {
+        printf("ID: %d | Descricao: %s\n",
+               aux->etapa.id,
+               aux->etapa.descricao);
+
+        aux = aux->prox;
+    }
+}
+
+void deletar_antes(Lista *lista, int id)
+{
+    
+    if (lista->inicio == NULL)
+    {
+        printf("Lista vazia!\n");
+        return;
+    }
+
+    
+    if (lista->inicio->etapa.id == id)
+    {
+        printf("A etapa informada e a primeira da lista. Nao existe etapa anterior.\n");
+        return;
+    }
+
+    
+    if (lista->inicio->prox != NULL &&
+        lista->inicio->prox->etapa.id == id)
+    {
+        No *temp = lista->inicio;
+
+        lista->inicio = lista->inicio->prox;
+
+        free(temp);
+
+        printf("Etapa anterior removida com sucesso!\n");
+        return;
+    }
+
+    
+    No *anterior = lista->inicio;
+    No *atual = lista->inicio->prox;
+    No *proximo = NULL;
+
+    while (atual != NULL && atual->etapa.id != id)
+    {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    
+    if (atual == NULL)
+    {
+        printf("Etapa de referencia nao encontrada!\n");
+        return;
+    }
+
+    
+    proximo = anterior->prox;
+
+    anterior->prox = proximo->prox;
+
+    free(proximo);
+
+    printf("Etapa anterior removida com sucesso!\n");
+}
+
+int main()
+{
+    Lista lista;
+    lista.inicio = NULL;
+
+    int opcao, id_ref;
+    Etapa etapa;
+
+    do
+    {
+        printf("\n=== MENU ===\n");
+        printf("1 - Inserir etapa no fim\n");
+        printf("2 - Mostrar etapas\n");
+        printf("3 - Deletar etapa ANTES de um ID\n");
+        printf("4 - Sair\n");
+        printf("Opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao)
+        {
+        case 1:
+
+            printf("ID da etapa: ");
+            scanf("%d", &etapa.id);
+
+            printf("Descricao: ");
+            scanf(" %99[^\n]", etapa.descricao);
+
+            inserir_fim(&lista, etapa);
+            break;
+
+        case 2:
+
+            mostrar_etapas(&lista);
+            break;
+
+        case 3:
+
+            printf("Digite o ID de referencia: ");
+            scanf("%d", &id_ref);
+
+            deletar_antes(&lista, id_ref);
+            break;
+
+        case 4:
+
+            printf("Encerrando programa...\n");
+            break;
+
+        default:
+
+            printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 4);
+
+    return 0;
+}
