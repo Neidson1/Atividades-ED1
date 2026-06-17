@@ -1,0 +1,43 @@
+void dispensar_heroi(Lista *lista, int id)
+{
+    // Caso 1: lista vazia
+    if (lista->inicio == NULL)
+    {
+        printf("\nA guilda esta vazia. Nenhum heroi para remover.\n");
+        return;
+    }
+
+    // Caso 2: o heroi a remover e o primeiro da lista
+    if (lista->inicio->heroi.id == id)
+    {
+        No *temp = lista->inicio;
+        lista->inicio = lista->inicio->prox;
+        free(temp);
+
+        printf("\nHeroi removido com sucesso!\n");
+        return;
+    }
+
+    // Casos 3 e 4: procurar o heroi no meio/fim da lista
+    No *anterior = lista->inicio;
+    No *atual = lista->inicio->prox;
+
+    while (atual != NULL && atual->heroi.id != id)
+    {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    // Caso 4: ID nao encontrado
+    if (atual == NULL)
+    {
+        printf("\nHeroi com ID %d nao encontrado.\n", id);
+        return;
+    }
+
+    // Caso 3: remover heroi encontrado
+    anterior->prox = atual->prox;
+    free(atual);
+
+    printf("\nHeroi removido com sucesso!\n");
+}
