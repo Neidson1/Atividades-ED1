@@ -1,0 +1,36 @@
+void deletar_fim(Lista *plista)
+{
+    if (plista->inicio == NULL)
+    {
+        printf("Nao e possivel remover jogadores. Lista vazia!\n");
+        return;
+    }
+
+    
+    if (plista->inicio->prox == NULL)
+    {
+        free(plista->inicio);
+        plista->inicio = NULL;
+
+        printf("Ultimo jogador removido com sucesso!\n");
+        return;
+    }
+
+    
+    No *anterior = NULL;
+    No *atual = plista->inicio;
+
+    while (atual->prox != NULL)
+    {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    
+    anterior->prox = NULL;
+
+    
+    free(atual);
+
+    printf("Ultimo jogador removido com sucesso!\n");
+}
