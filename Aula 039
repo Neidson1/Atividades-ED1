@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct
+{
+    char nome[50];
+    float hp;
+    float atk;
+} Inimigo;
+
+int main()
+{
+    FILE *arquivo;
+    Inimigo inimigos[3];
+    float nivel_ameaca;
+    int i;
+
+    arquivo = fopen("inimigos.txt", "r");
+
+    if (arquivo == NULL)
+    {
+        printf("Erro ao abrir o arquivo!\n");
+        return 1;
+    }
+
+    for (i = 0; i < 3; i++)
+    {
+        fscanf(arquivo, "%s %f %f",
+               inimigos[i].nome,
+               &inimigos[i].hp,
+               &inimigos[i].atk);
+    }
+
+    printf("=== INIMIGOS ELITE ===\n");
+
+    for (i = 0; i < 3; i++)
+    {
+        nivel_ameaca = inimigos[i].hp + inimigos[i].atk;
+
+        if (nivel_ameaca >= 200)
+        {
+            printf("Nome: %s\n", inimigos[i].nome);
+            printf("Nivel de Ameaca: %.1f\n\n", nivel_ameaca);
+        }
+    }
+
+    fclose(arquivo);
+
+    return 0;
+}
