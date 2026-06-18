@@ -1,0 +1,122 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Struct do mercenário
+typedef struct Mercenario {
+    int id;
+    char nome[50];
+    struct Mercenario *prox;
+} Mercenario;
+
+// Inserir no fim da lista
+void contratar_mercenario(Mercenario **lista) {
+    Mercenario *novo = (Mercenario *)malloc(sizeof(Mercenario));
+
+    if (novo == NULL) {
+        printf("Erro ao alocar memoria!\n");
+        return;
+    }
+
+    printf("Digite o ID do mercenario: ");
+    scanf("%d", &novo->id);
+
+    getchar(); // remove '\n' do buffer
+
+    printf("Digite o nome do mercenario: ");
+    fgets(novo->nome, 50, stdin);
+    novo->nome[strcspn(novo->nome, "\n")] = '\0';
+
+    novo->prox = NULL;
+
+    if (*lista == NULL) {
+        *lista = novo;
+    } else {
+        Mercenario *aux = *lista;
+
+        while (aux->prox != NULL) {
+            aux = aux->prox;
+        }
+
+        aux->prox = novo;
+    }
+
+    printf("\nMercenario contratado com sucesso!\n");
+}
+
+// Exibir lista
+void exibir_companhia(Mercenario *lista) {
+    if (lista == NULL) {
+        printf("\nA companhia esta vazia.\n");
+        return;
+    }
+
+    printf("\n=== COMPANHIA DE MERCENARIOS ===\n");
+
+    while (lista != NULL) {
+        printf("ID: %d\n", lista->id);
+        printf("Nome: %s\n", lista->nome);
+        printf("-------------------------\n");
+
+        lista = lista->prox;
+    }
+}
+
+// Deletar toda a lista
+void demitir_todos_mercenarios(Mercenario **lista) {
+    Mercenario *temp;
+
+    while (*lista != NULL) {
+        temp = *lista;
+        *lista = (*lista)->prox;
+        free(temp);
+    }
+
+    printf("\nTodos os mercenarios foram demitidos.\n");
+
+    // Confirmação
+    if (*lista == NULL) {
+        printf("A companhia esta vazia.\n");
+    }
+}
+
+int main() {
+    Mercenario *companhia = NULL;
+    int opcao;
+
+    do {
+        printf("\n===== MENU =====\n");
+        printf("1. Contratar mercenario\n");
+        printf("2. Exibir companhia\n");
+        printf("3. Declarar falencia\n");
+        printf("4. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                contratar_mercenario(&companhia);
+                break;
+
+            case 2:
+                exibir_companhia(companhia);
+                break;
+
+            case 3:
+                demitir_todos_mercenarios(&companhia);
+                break;
+
+            case 4:
+                // Garante que toda memória seja liberada antes de sair
+                demitir_todos_mercenarios(&companhia);
+                printf("\nEncerrando o programa...\n");
+                break;
+
+            default:
+                printf("\nOpcao invalida!\n");
+        }
+
+    } while (opcao != 4);
+
+    return 0;
+}
