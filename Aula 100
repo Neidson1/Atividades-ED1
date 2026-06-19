@@ -1,0 +1,107 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Struct do feitiço
+typedef struct {
+    char nome[50];
+    int custo_mana;
+} Feitico;
+
+// Nó da pilha
+typedef struct No {
+    Feitico dado;
+    struct No *prox;
+} No;
+
+// Struct da pilha
+typedef struct {
+    No *topo;
+} Pilha;
+
+// Inicializa a pilha
+void inicializar(Pilha *p) {
+    p->topo = NULL;
+}
+
+// Empilha um novo feitiço
+void push(Pilha *p, char nome[], int custo_mana) {
+
+    No *novo = (No *) malloc(sizeof(No));
+
+    if (novo == NULL) {
+        printf("Erro de alocacao de memoria!\n");
+        return;
+    }
+
+    strcpy(novo->dado.nome, nome);
+    novo->dado.custo_mana = custo_mana;
+
+    // Inserção no topo da pilha
+    novo->prox = p->topo;
+    p->topo = novo;
+
+    printf("Feitico adicionado com sucesso!\n");
+}
+
+// Libera toda a memória da pilha
+void destruir_pilha(Pilha *p) {
+
+    No *aux;
+
+    while (p->topo != NULL) {
+        aux = p->topo;
+        p->topo = p->topo->prox;
+        free(aux);
+    }
+}
+
+int main() {
+
+    Pilha pilha;
+    inicializar(&pilha);
+
+    int opcao, custo_mana;
+    char nome[50];
+
+    do {
+
+        printf("\n===== PILHA DE COMANDOS DO ARCANISTA =====\n");
+        printf("1 - Adicionar novo feitico\n");
+        printf("2 - Finalizar e sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+        case 1:
+
+            getchar();
+
+            printf("Nome do feitico: ");
+            fgets(nome, 50, stdin);
+            nome[strcspn(nome, "\n")] = '\0';
+
+            printf("Custo de mana: ");
+            scanf("%d", &custo_mana);
+
+            push(&pilha, nome, custo_mana);
+
+            break;
+
+        case 2:
+
+            printf("Sequencia de comandos encerrada.\n");
+            break;
+
+        default:
+
+            printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 2);
+
+    destruir_pilha(&pilha);
+
+    return 0;
+}
