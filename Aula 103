@@ -1,0 +1,185 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Struct do feitiço
+typedef struct {
+    char nome[50];
+    int custo_mana;
+} Feitico;
+
+// Nó da pilha
+typedef struct No {
+    Feitico dado;
+    struct No *prox;
+} No;
+
+// Struct da pilha
+typedef struct {
+    No *topo;
+} Pilha;
+
+// Inicializa a pilha
+void inicializar(Pilha *p) {
+    p->topo = NULL;
+}
+
+// Verifica se a pilha está vazia
+int vazia(Pilha *p) {
+    if (p->topo == NULL)
+        return 1;
+    else
+        return 0;
+}
+
+// Adiciona um feitiço ao topo
+void push(Pilha *p, char nome[], int custo_mana) {
+
+    No *novo = (No *) malloc(sizeof(No));
+
+    if (novo == NULL) {
+        printf("Erro de alocacao de memoria!\n");
+        return;
+    }
+
+    strcpy(novo->dado.nome, nome);
+    novo->dado.custo_mana = custo_mana;
+
+    novo->prox = p->topo;
+    p->topo = novo;
+
+    printf("Feitico adicionado com sucesso!\n");
+}
+
+// Remove o feitiço do topo
+Feitico pop(Pilha *p) {
+
+    Feitico retorno;
+    retorno.custo_mana = -1;
+
+    if (vazia(p)) {
+        printf("A pilha de comandos esta vazia!\n");
+        return retorno;
+    }
+
+    No *aux = p->topo;
+
+    retorno = aux->dado;
+
+    p->topo = aux->prox;
+
+    free(aux);
+
+    return retorno;
+}
+
+// Mostra a pilha
+void mostrar_pilha(Pilha *p) {
+
+    if (vazia(p)) {
+        printf("\nA pilha de comandos esta vazia.\n");
+        return;
+    }
+
+    No *aux = p->topo;
+
+    printf("\n=== PILHA DE COMANDOS ===\n");
+
+    while (aux != NULL) {
+
+        printf("Feitico: %s\n", aux->dado.nome);
+        printf("Custo de Mana: %d\n", aux->dado.custo_mana);
+        printf("----------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Libera toda a memória da pilha
+void liberar_pilha(Pilha *p) {
+
+    while (!vazia(p)) {
+        pop(p);
+    }
+}
+
+int main() {
+
+    Pilha pilha;
+    inicializar(&pilha);
+
+    int opcao, custo_mana;
+    char nome[50];
+    Feitico f;
+
+    do {
+
+        printf("\n===== PILHA DE COMANDOS DO ARCANISTA =====\n");
+        printf("1 - Adicionar novo feitico\n");
+        printf("2 - Lancar proximo feitico\n");
+        printf("3 - Mostrar pilha de comandos\n");
+        printf("4 - Verificar status da pilha\n");
+        printf("5 - Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+        case 1:
+
+            getchar();
+
+            printf("Nome do feitico: ");
+            fgets(nome, 50, stdin);
+            nome[strcspn(nome, "\n")] = '\0';
+
+            printf("Custo de mana: ");
+            scanf("%d", &custo_mana);
+
+            push(&pilha, nome, custo_mana);
+
+            break;
+
+        case 2:
+
+            f = pop(&pilha);
+
+            if (f.custo_mana != -1) {
+                printf("Feitico '%s' lancado com sucesso!\n", f.nome);
+            }
+
+            break;
+
+        case 3:
+
+            mostrar_pilha(&pilha);
+
+            break;
+
+        case 4:
+
+            if (vazia(&pilha))
+                printf("A pilha de comandos esta vazia.\n");
+            else
+                printf("A pilha de comandos possui feiticos pendentes.\n");
+
+            break;
+
+        case 5:
+
+            liberar_pilha(&pilha);
+
+            printf("Encerrando o programa...\n");
+
+            break;
+
+        default:
+
+            printf("Opcao invalida!\n");
+
+        }
+
+    } while (opcao != 5);
+
+    return 0;
+}
