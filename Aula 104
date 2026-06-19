@@ -1,0 +1,211 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Struct do feitiço
+typedef struct {
+    char nome[50];
+    int custo_mana;
+} Feitico;
+
+// Nó da pilha
+typedef struct No {
+    Feitico dado;
+    struct No *prox;
+} No;
+
+// Estrutura da pilha
+typedef struct {
+    No *topo;
+} Pilha;
+
+// Inicializa a pilha
+void inicializar(Pilha *p) {
+    p->topo = NULL;
+}
+
+// Verifica se a pilha está vazia
+int vazia(Pilha *p) {
+    return (p->topo == NULL);
+}
+
+// Adiciona um feitiço ao topo da pilha
+void push(Pilha *p, char nome[], int custo_mana) {
+
+    No *novo = (No *)malloc(sizeof(No));
+
+    if (novo == NULL) {
+        printf("Erro de alocacao de memoria!\n");
+        return;
+    }
+
+    strcpy(novo->dado.nome, nome);
+    novo->dado.custo_mana = custo_mana;
+
+    novo->prox = p->topo;
+    p->topo = novo;
+
+    printf("Feitico adicionado com sucesso!\n");
+}
+
+// Remove o feitiço do topo da pilha
+Feitico pop(Pilha *p) {
+
+    Feitico retorno;
+    retorno.custo_mana = -1;
+
+    if (vazia(p)) {
+        printf("A pilha de comandos esta vazia!\n");
+        return retorno;
+    }
+
+    No *aux = p->topo;
+
+    retorno = aux->dado;
+
+    p->topo = aux->prox;
+
+    free(aux);
+
+    return retorno;
+}
+
+// Consulta o topo da pilha sem remover
+Feitico top(Pilha *p) {
+
+    Feitico retorno;
+    retorno.custo_mana = -1;
+
+    if (vazia(p)) {
+        printf("A pilha de comandos esta vazia!\n");
+        return retorno;
+    }
+
+    retorno = p->topo->dado;
+
+    return retorno;
+}
+
+// Mostra toda a pilha
+void mostrar_pilha(Pilha *p) {
+
+    if (vazia(p)) {
+        printf("A pilha de comandos esta vazia.\n");
+        return;
+    }
+
+    No *aux = p->topo;
+
+    printf("\n=== PILHA DE COMANDOS ===\n");
+
+    while (aux != NULL) {
+
+        printf("Feitico: %s\n", aux->dado.nome);
+        printf("Custo de Mana: %d\n", aux->dado.custo_mana);
+        printf("------------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Libera toda a memória da pilha
+void liberar_pilha(Pilha *p) {
+
+    while (!vazia(p)) {
+        pop(p);
+    }
+}
+
+int main() {
+
+    Pilha pilha;
+    Feitico f;
+    int opcao, custo_mana;
+    char nome[50];
+
+    inicializar(&pilha);
+
+    do {
+
+        printf("\n===== PILHA DE COMANDOS DO ARCANISTA =====\n");
+        printf("1 - Adicionar novo feitico\n");
+        printf("2 - Lancar proximo feitico\n");
+        printf("3 - Mostrar pilha de comandos\n");
+        printf("4 - Consultar proximo feitico (Top)\n");
+        printf("5 - Verificar status da pilha\n");
+        printf("6 - Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+        case 1:
+
+            getchar();
+
+            printf("Nome do feitico: ");
+            fgets(nome, sizeof(nome), stdin);
+            nome[strcspn(nome, "\n")] = '\0';
+
+            printf("Custo de mana: ");
+            scanf("%d", &custo_mana);
+
+            push(&pilha, nome, custo_mana);
+
+            break;
+
+        case 2:
+
+            f = pop(&pilha);
+
+            if (f.custo_mana != -1) {
+                printf("Feitico '%s' lancado com sucesso!\n", f.nome);
+            }
+
+            break;
+
+        case 3:
+
+            mostrar_pilha(&pilha);
+
+            break;
+
+        case 4:
+
+            f = top(&pilha);
+
+            if (f.custo_mana != -1) {
+
+                printf("\nProximo feitico da pilha:\n");
+                printf("Nome: %s\n", f.nome);
+                printf("Custo de Mana: %d\n", f.custo_mana);
+            }
+
+            break;
+
+        case 5:
+
+            if (vazia(&pilha))
+                printf("A pilha de comandos esta vazia.\n");
+            else
+                printf("A pilha de comandos possui feiticos pendentes.\n");
+
+            break;
+
+        case 6:
+
+            liberar_pilha(&pilha);
+
+            printf("Programa encerrado.\n");
+
+            break;
+
+        default:
+
+            printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 6);
+
+    return 0;
+}
