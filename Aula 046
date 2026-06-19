@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Estrutura do perfil do jogador
+typedef struct {
+    char nome[50];
+    int nivel;
+    int highScore;
+} PlayerProfile;
+
+int main() {
+    FILE *arquivo;
+    PlayerProfile jogador;
+
+    // Abre o arquivo em modo de leitura binária
+    arquivo = fopen("profiles.dat", "rb");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo profiles.dat.\n");
+        return 1;
+    }
+
+    // Lê um perfil por vez até chegar ao final do arquivo
+    while (fread(&jogador, sizeof(PlayerProfile), 1, arquivo) == 1) {
+
+        printf("Jogador: %s\n", jogador.nome);
+
+        if (jogador.highScore > 10000) {
+            printf("Rank: Mestre do Jogo\n");
+        }
+        else if (jogador.highScore > 5000) {
+            printf("Rank: Veterano\n");
+        }
+        else {
+            printf("Rank: Aspirante\n");
+        }
+
+        printf("----------------------\n");
+    }
+
+    // Fecha o arquivo
+    fclose(arquivo);
+
+    return 0;
+}
