@@ -1,0 +1,166 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Estrutura com os dados do membro
+typedef struct {
+    int id;
+    char nome[100];
+} Membro;
+
+// Nó da lista encadeada
+typedef struct No {
+    Membro dado;
+    struct No *prox;
+} No;
+
+// Estrutura da lista
+typedef struct {
+    No *inicio;
+} Lista;
+
+// Inicializa a lista
+void inicializar(Lista *lista) {
+    lista->inicio = NULL;
+}
+
+// Insere no final da lista
+void inserir_fim(Lista *lista, int id, char nome[]) {
+    No *novo = (No *)malloc(sizeof(No));
+
+    if (novo == NULL) {
+        printf("Erro na alocacao de memoria!\n");
+        return;
+    }
+
+    novo->dado.id = id;
+    strcpy(novo->dado.nome, nome);
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL) {
+        lista->inicio = novo;
+    } else {
+        No *aux = lista->inicio;
+
+        while (aux->prox != NULL) {
+            aux = aux->prox;
+        }
+
+        aux->prox = novo;
+    }
+
+    printf("Membro adicionado com sucesso!\n");
+}
+
+// Exibe a lista
+void mostrar_lista(Lista lista) {
+    No *aux = lista.inicio;
+
+    if (aux == NULL) {
+        printf("\nGuilda vazia.\n");
+        return;
+    }
+
+    printf("\n=== MEMBROS DA GUILDA ===\n");
+
+    while (aux != NULL) {
+        printf("ID: %d\n", aux->dado.id);
+        printf("Nome: %s\n", aux->dado.nome);
+        printf("----------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Salva a lista em arquivo binário
+void salvar_guild_arquivo(Lista lista) {
+    FILE *arquivo;
+
+    arquivo = fopen("guild_roster.bin", "wb");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo!\n");
+        return;
+    }
+
+    No *aux = lista.inicio;
+
+    while (aux != NULL) {
+
+        // Salva somente os dados do membro
+        fwrite(&(aux->dado), sizeof(Membro), 1, arquivo);
+
+        aux = aux->prox;
+    }
+
+    fclose(arquivo);
+
+    printf("\nGuilda salva com sucesso em guild_roster.bin\n");
+}
+
+// Libera a memória da lista
+void liberar_lista(Lista *lista) {
+    No *aux = lista->inicio;
+    No *temp;
+
+    while (aux != NULL) {
+        temp = aux;
+        aux = aux->prox;
+        free(temp);
+    }
+
+    lista->inicio = NULL;
+}
+
+int main() {
+    Lista guilda;
+    inicializar(&guilda);
+
+    int opcao, id;
+    char nome[100];
+
+    do {
+        printf("\n===== MENU =====\n");
+        printf("1. Adicionar membro\n");
+        printf("2. Mostrar guilda\n");
+        printf("3. Salvar guilda em arquivo\n");
+        printf("4. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+        case 1:
+            printf("Digite o ID do membro: ");
+            scanf("%d", &id);
+
+            getchar();
+
+            printf("Digite o nome do membro: ");
+            fgets(nome, 100, stdin);
+            nome[strcspn(nome, "\n")] = '\0';
+
+            inserir_fim(&guilda, id, nome);
+            break;
+
+        case 2:
+            mostrar_lista(guilda);
+            break;
+
+        case 3:
+            salvar_guild_arquivo(guilda);
+            break;
+
+        case 4:
+            liberar_lista(&guilda);
+            printf("Encerrando o programa...\n");
+            break;
+
+        default:
+            printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 4);
+
+    return 0;
+}
