@@ -1,0 +1,134 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Estrutura do mercenário
+typedef struct Mercenario {
+    int id;
+    char nome[100];
+    struct Mercenario *prox;
+} Mercenario;
+
+// Estrutura da lista
+typedef struct {
+    Mercenario *inicio;
+} Lista;
+
+// Inicializa a lista
+void inicializar(Lista *lista) {
+    lista->inicio = NULL;
+}
+
+// Inserir no fim da lista
+void inserir_fim(Lista *lista, int id, char nome[]) {
+    Mercenario *novo = (Mercenario *) malloc(sizeof(Mercenario));
+
+    if (novo == NULL) {
+        printf("Erro de alocacao de memoria!\n");
+        return;
+    }
+
+    novo->id = id;
+    strcpy(novo->nome, nome);
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL) {
+        lista->inicio = novo;
+    } else {
+        Mercenario *aux = lista->inicio;
+
+        while (aux->prox != NULL) {
+            aux = aux->prox;
+        }
+
+        aux->prox = novo;
+    }
+
+    printf("Mercenario contratado com sucesso!\n");
+}
+
+// Mostrar lista
+void mostrar_lista(Lista *lista) {
+    Mercenario *aux = lista->inicio;
+
+    if (aux == NULL) {
+        printf("\nA guilda esta vazia.\n");
+        return;
+    }
+
+    printf("\n=== GUILDA DE MERCENARIOS ===\n");
+
+    while (aux != NULL) {
+        printf("ID: %d\n", aux->id);
+        printf("Nome: %s\n", aux->nome);
+        printf("---------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Função que retorna o tamanho da lista
+int tamanho(Lista *lista) {
+    int contador = 0;
+    Mercenario *aux = lista->inicio;
+
+    while (aux != NULL) {
+        contador++;
+        aux = aux->prox;
+    }
+
+    return contador;
+}
+
+int main() {
+    Lista guilda;
+    inicializar(&guilda);
+
+    int opcao, id;
+    char nome[100];
+
+    do {
+        printf("\n===== MENU =====\n");
+        printf("1. Contratar mercenario\n");
+        printf("2. Exibir guilda\n");
+        printf("3. Mostrar quantidade de mercenarios\n");
+        printf("4. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+            case 1:
+                printf("Digite o ID do mercenario: ");
+                scanf("%d", &id);
+
+                getchar();
+
+                printf("Digite o nome do mercenario: ");
+                fgets(nome, 100, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+
+                inserir_fim(&guilda, id, nome);
+                break;
+
+            case 2:
+                mostrar_lista(&guilda);
+                break;
+
+            case 3:
+                printf("\nQuantidade atual de mercenarios: %d\n",
+                       tamanho(&guilda));
+                break;
+
+            case 4:
+                printf("Encerrando o programa...\n");
+                break;
+
+            default:
+                printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 4);
+
+    return 0;
+}
