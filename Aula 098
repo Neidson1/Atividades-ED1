@@ -1,0 +1,162 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Struct do membro
+typedef struct {
+    int id;
+    char nome[100];
+    int nivel;
+} Membro;
+
+// Nó da lista encadeada
+typedef struct No {
+    Membro dado;
+    struct No *prox;
+} No;
+
+// Struct da lista
+typedef struct {
+    No *inicio;
+} Lista;
+
+// Inicializa a lista
+void inicializar(Lista *lista) {
+    lista->inicio = NULL;
+}
+
+// Inserir no final da lista
+void inserir_fim(Lista *lista, Membro m) {
+
+    No *novo = (No *) malloc(sizeof(No));
+
+    if (novo == NULL) {
+        printf("Erro de memoria!\n");
+        return;
+    }
+
+    novo->dado = m;
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL) {
+        lista->inicio = novo;
+    }
+    else {
+        No *aux = lista->inicio;
+
+        while (aux->prox != NULL) {
+            aux = aux->prox;
+        }
+
+        aux->prox = novo;
+    }
+}
+
+// Mostrar a guilda
+void mostrar_guilda(Lista lista) {
+
+    No *aux = lista.inicio;
+
+    if (aux == NULL) {
+        printf("Guilda vazia.\n");
+        return;
+    }
+
+    printf("\n=== MEMBROS DA GUILDA ===\n");
+
+    while (aux != NULL) {
+
+        printf("ID: %d\n", aux->dado.id);
+        printf("Nome: %s\n", aux->dado.nome);
+        printf("Nivel: %d\n", aux->dado.nivel);
+        printf("---------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Função auxiliar para criar o arquivo de teste
+void salvar_guilda_teste() {
+
+    FILE *arquivo;
+
+    Membro membros[3] = {
+        {101, "Arthur", 15},
+        {102, "Lancelot", 22},
+        {103, "Merlin", 30}
+    };
+
+    arquivo = fopen("guild_roster.b", "wb");
+
+    if (arquivo == NULL) {
+        printf("Erro ao criar o arquivo.\n");
+        return;
+    }
+
+    fwrite(membros, sizeof(Membro), 3, arquivo);
+
+    fclose(arquivo);
+}
+
+// Carregar a guilda do arquivo
+Lista carregar_guilda() {
+
+    Lista lista;
+    inicializar(&lista);
+
+    FILE *arquivo;
+    Membro membro;
+
+    arquivo = fopen("guild_roster.b", "rb");
+
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo.\n");
+        return lista;
+    }
+
+    while (fread(&membro, sizeof(Membro), 1, arquivo) == 1) {
+
+        inserir_fim(&lista, membro);
+
+    }
+
+    fclose(arquivo);
+
+    return lista;
+}
+
+// Liberar memória da lista
+void liberar_lista(Lista *lista) {
+
+    No *aux = lista->inicio;
+    No *temp;
+
+    while (aux != NULL) {
+
+        temp = aux;
+        aux = aux->prox;
+        free(temp);
+
+    }
+
+    lista->inicio = NULL;
+}
+
+int main() {
+
+    Lista guilda;
+
+    // Cria o arquivo de teste
+    salvar_guilda_teste();
+
+    // Carrega a guilda do arquivo
+    guilda = carregar_guilda();
+
+    // Exibe os membros carregados
+    mostrar_guilda(guilda);
+
+    // Libera a memória
+    liberar_lista(&guilda);
+
+    return 0;
+}
