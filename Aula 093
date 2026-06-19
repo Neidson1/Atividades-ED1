@@ -1,0 +1,156 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Estrutura do membro
+typedef struct Membro {
+    int id;
+    char nome[100];
+    struct Membro *prox;
+} Membro;
+
+// Estrutura da lista
+typedef struct {
+    Membro *inicio;
+} Lista;
+
+// Inicializa a lista
+void inicializar(Lista *lista) {
+    lista->inicio = NULL;
+}
+
+// Insere no fim da lista
+void inserir_fim(Lista *lista, int id, char nome[]) {
+    Membro *novo = (Membro *)malloc(sizeof(Membro));
+
+    if (novo == NULL) {
+        printf("Erro de alocacao de memoria!\n");
+        return;
+    }
+
+    novo->id = id;
+    strcpy(novo->nome, nome);
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL) {
+        lista->inicio = novo;
+    } else {
+        Membro *aux = lista->inicio;
+
+        while (aux->prox != NULL) {
+            aux = aux->prox;
+        }
+
+        aux->prox = novo;
+    }
+
+    printf("Membro adicionado com sucesso!\n");
+}
+
+// Mostra a lista
+void mostrar_lista(Lista *lista) {
+    Membro *aux = lista->inicio;
+
+    if (aux == NULL) {
+        printf("\nA guilda esta vazia.\n");
+        return;
+    }
+
+    printf("\n=== MEMBROS DA GUILDA ===\n");
+
+    while (aux != NULL) {
+        printf("ID: %d\n", aux->id);
+        printf("Nome: %s\n", aux->nome);
+        printf("--------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Função de busca
+Membro *pesquisar(Lista *lista, int id) {
+    Membro *aux = lista->inicio;
+
+    while (aux != NULL) {
+        if (aux->id == id) {
+            return aux;
+        }
+
+        aux = aux->prox;
+    }
+
+    return NULL;
+}
+
+// Altera o nome do membro
+void alterar_nome(Lista *lista, int id, char novo_nome[]) {
+    Membro *membro = pesquisar(lista, id);
+
+    if (membro != NULL) {
+        strcpy(membro->nome, novo_nome);
+        printf("Nome alterado com sucesso!\n");
+    } else {
+        printf("Erro: membro com ID %d nao encontrado.\n", id);
+    }
+}
+
+int main() {
+    Lista lista;
+    inicializar(&lista);
+
+    int opcao, id;
+    char nome[100];
+
+    do {
+        printf("\n===== MENU =====\n");
+        printf("1. Adicionar membro\n");
+        printf("2. Mostrar lista\n");
+        printf("3. Alterar nome de um membro\n");
+        printf("4. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+            case 1:
+                printf("Digite o ID do membro: ");
+                scanf("%d", &id);
+
+                getchar();
+
+                printf("Digite o nome do membro: ");
+                fgets(nome, 100, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+
+                inserir_fim(&lista, id, nome);
+                break;
+
+            case 2:
+                mostrar_lista(&lista);
+                break;
+
+            case 3:
+                printf("Digite o ID do membro: ");
+                scanf("%d", &id);
+
+                getchar();
+
+                printf("Digite o novo nome: ");
+                fgets(nome, 100, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+
+                alterar_nome(&lista, id, nome);
+                break;
+
+            case 4:
+                printf("Encerrando o programa...\n");
+                break;
+
+            default:
+                printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 4);
+
+    return 0;
+}
