@@ -1,0 +1,187 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    char nome[50];
+    int custo_mana;
+} Feitico;
+
+typedef struct No {
+    Feitico dado;
+    struct No *prox;
+} No;
+
+typedef struct {
+    No *topo;
+} Pilha;
+
+// Inicializa a pilha
+void inicializar(Pilha *p) {
+    p->topo = NULL;
+}
+
+// Verifica se a pilha está vazia
+int vazia(Pilha *p) {
+    return (p->topo == NULL);
+}
+
+// Push
+void push(Pilha *p, Feitico f) {
+
+    No *novo = (No *) malloc(sizeof(No));
+
+    if (novo == NULL) {
+        printf("Erro de memoria!\n");
+        return;
+    }
+
+    novo->dado = f;
+    novo->prox = p->topo;
+
+    p->topo = novo;
+}
+
+// Pop
+Feitico pop(Pilha *p) {
+
+    Feitico retorno;
+    retorno.custo_mana = -1;
+
+    if (vazia(p))
+        return retorno;
+
+    No *aux = p->topo;
+
+    retorno = aux->dado;
+
+    p->topo = aux->prox;
+
+    free(aux);
+
+    return retorno;
+}
+
+// Mostra a pilha
+void mostrar_pilha(Pilha *p) {
+
+    No *aux = p->topo;
+
+    if (vazia(p)) {
+        printf("A pilha esta vazia.\n");
+        return;
+    }
+
+    printf("\n=== PILHA DE COMANDOS ===\n");
+
+    while (aux != NULL) {
+
+        printf("Feitico: %s\n", aux->dado.nome);
+        printf("Custo de Mana: %d\n", aux->dado.custo_mana);
+        printf("---------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Salvar pilha em arquivo binário
+void salvar_pilha_em_arquivo(Pilha *p, const char *nome_arquivo) {
+
+    FILE *arquivo;
+
+    arquivo = fopen(nome_arquivo, "wb");
+
+    if (arquivo == NULL) {
+
+        printf("Erro ao abrir o arquivo!\n");
+        return;
+    }
+
+    No *aux = p->topo;
+
+    while (aux != NULL) {
+
+        fwrite(&aux->dado, sizeof(Feitico), 1, arquivo);
+
+        aux = aux->prox;
+    }
+
+    fclose(arquivo);
+
+    printf("Sequencia salva com sucesso em '%s'!\n", nome_arquivo);
+}
+
+// Libera memória da pilha
+void liberar_pilha(Pilha *p) {
+
+    while (!vazia(p)) {
+        pop(p);
+    }
+}
+
+int main() {
+
+    Pilha pilha;
+    Feitico f;
+    int opcao;
+
+    inicializar(&pilha);
+
+    do {
+
+        printf("\n===== ARCANISTA =====\n");
+        printf("1 - Adicionar feitico\n");
+        printf("2 - Mostrar pilha\n");
+        printf("3 - Inverter ordem dos feiticos\n");
+        printf("4 - Consultar topo\n");
+        printf("5 - Salvar sequencia no grimorio\n");
+        printf("6 - Sair\n");
+        printf("Opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+        case 1:
+
+            getchar();
+
+            printf("Nome do feitico: ");
+            fgets(f.nome, 50, stdin);
+            f.nome[strcspn(f.nome, "\n")] = '\0';
+
+            printf("Custo de mana: ");
+            scanf("%d", &f.custo_mana);
+
+            push(&pilha, f);
+
+            break;
+
+        case 2:
+
+            mostrar_pilha(&pilha);
+
+            break;
+
+        case 5:
+
+            salvar_pilha_em_arquivo(&pilha, "grimorio.bin");
+
+            break;
+
+        case 6:
+
+            liberar_pilha(&pilha);
+
+            printf("Programa encerrado.\n");
+
+            break;
+
+        default:
+
+            printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 6);
+
+    return 0;
+}
