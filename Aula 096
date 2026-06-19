@@ -1,0 +1,174 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Estrutura do monstro
+typedef struct Monstro {
+    int id;                 // Nível de ameaça
+    char nome[100];
+    struct Monstro *prox;
+} Monstro;
+
+// Estrutura da lista
+typedef struct {
+    Monstro *inicio;
+} Lista;
+
+// Inicializa a lista
+void inicializar(Lista *lista) {
+    lista->inicio = NULL;
+}
+
+// Adiciona um monstro no final da lista
+void adicionarMonstro(Lista *lista, int id, char nome[]) {
+    Monstro *novo = (Monstro *) malloc(sizeof(Monstro));
+
+    if (novo == NULL) {
+        printf("Erro na alocacao de memoria!\n");
+        return;
+    }
+
+    novo->id = id;
+    strcpy(novo->nome, nome);
+    novo->prox = NULL;
+
+    if (lista->inicio == NULL) {
+        lista->inicio = novo;
+    } else {
+        Monstro *aux = lista->inicio;
+
+        while (aux->prox != NULL) {
+            aux = aux->prox;
+        }
+
+        aux->prox = novo;
+    }
+
+    printf("Monstro adicionado com sucesso!\n");
+}
+
+// Exibe o bestiário
+void mostrarBestiario(Lista *lista) {
+    Monstro *aux = lista->inicio;
+
+    if (aux == NULL) {
+        printf("\nBestiario vazio.\n");
+        return;
+    }
+
+    printf("\n=== BESTIARIO ===\n");
+
+    while (aux != NULL) {
+        printf("Nivel de Ameaca: %d\n", aux->id);
+        printf("Nome: %s\n", aux->nome);
+        printf("----------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Ordena utilizando Bubble Sort
+void ordenarBestiario(Lista *lista) {
+    if (lista->inicio == NULL || lista->inicio->prox == NULL) {
+        return;
+    }
+
+    int trocou;
+    Monstro *p;
+
+    do {
+        trocou = 0;
+        p = lista->inicio;
+
+        while (p->prox != NULL) {
+
+            if (p->id > p->prox->id) {
+
+                // Troca os IDs
+                int tempId = p->id;
+                p->id = p->prox->id;
+                p->prox->id = tempId;
+
+                // Troca os nomes
+                char tempNome[100];
+                strcpy(tempNome, p->nome);
+                strcpy(p->nome, p->prox->nome);
+                strcpy(p->prox->nome, tempNome);
+
+                trocou = 1;
+            }
+
+            p = p->prox;
+        }
+
+    } while (trocou);
+
+    printf("\nBestiario ordenado com sucesso!\n");
+}
+
+// Libera a memória da lista
+void liberarLista(Lista *lista) {
+    Monstro *aux = lista->inicio;
+    Monstro *temp;
+
+    while (aux != NULL) {
+        temp = aux;
+        aux = aux->prox;
+        free(temp);
+    }
+
+    lista->inicio = NULL;
+}
+
+int main() {
+    Lista bestiario;
+    inicializar(&bestiario);
+
+    int opcao, id;
+    char nome[100];
+
+    do {
+        printf("\n===== MENU =====\n");
+        printf("1. Adicionar monstro\n");
+        printf("2. Ordenar bestiario\n");
+        printf("3. Mostrar bestiario\n");
+        printf("4. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+            case 1:
+                printf("Digite o nivel de ameaca do monstro: ");
+                scanf("%d", &id);
+
+                getchar();
+
+                printf("Digite o nome do monstro: ");
+                fgets(nome, 100, stdin);
+                nome[strcspn(nome, "\n")] = '\0';
+
+                adicionarMonstro(&bestiario, id, nome);
+                break;
+
+            case 2:
+                ordenarBestiario(&bestiario);
+                break;
+
+            case 3:
+                mostrarBestiario(&bestiario);
+                break;
+
+            case 4:
+                liberarLista(&bestiario);
+                printf("Encerrando o programa...\n");
+                break;
+
+            default:
+                printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 4);
+
+    return 0;
+}
