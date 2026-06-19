@@ -1,0 +1,120 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Struct do feitiço
+typedef struct {
+    int id;
+    char name[50];
+    int mana_cost;
+} Spell;
+
+// Nó da lista encadeada
+typedef struct Node {
+    Spell data;
+    struct Node *next;
+} Node;
+
+// Grimório
+typedef struct {
+    Node *head;
+} Spellbook;
+
+// Cria um grimório vazio
+Spellbook* create_spellbook() {
+    Spellbook *book = (Spellbook*) malloc(sizeof(Spellbook));
+
+    if (book == NULL) {
+        printf("Erro na alocacao de memoria!\n");
+        return NULL;
+    }
+
+    book->head = NULL;
+
+    return book;
+}
+
+// Adiciona um feitiço ao final do grimório
+void add_spell(Spellbook* book, int id, const char* name, int mana_cost) {
+
+    Node *newNode = (Node*) malloc(sizeof(Node));
+
+    if (newNode == NULL) {
+        printf("Erro na alocacao de memoria!\n");
+        return;
+    }
+
+    newNode->data.id = id;
+    strcpy(newNode->data.name, name);
+    newNode->data.mana_cost = mana_cost;
+    newNode->next = NULL;
+
+    if (book->head == NULL) {
+        book->head = newNode;
+    } else {
+        Node *aux = book->head;
+
+        while (aux->next != NULL) {
+            aux = aux->next;
+        }
+
+        aux->next = newNode;
+    }
+}
+
+// Exibe todos os feitiços do grimório
+void display_spellbook(Spellbook* book) {
+
+    Node *aux = book->head;
+
+    if (aux == NULL) {
+        printf("\nGrimorio vazio.\n");
+        return;
+    }
+
+    printf("\n=== GRIMORIO DO MAGO ===\n");
+
+    while (aux != NULL) {
+
+        printf("ID: %d\n", aux->data.id);
+        printf("Feitico: %s\n", aux->data.name);
+        printf("Custo de Mana: %d\n", aux->data.mana_cost);
+        printf("------------------------\n");
+
+        aux = aux->next;
+    }
+}
+
+// Libera toda a memória do grimório
+void destroy_spellbook(Spellbook* book) {
+
+    Node *aux = book->head;
+    Node *temp;
+
+    while (aux != NULL) {
+        temp = aux;
+        aux = aux->next;
+        free(temp);
+    }
+
+    free(book);
+}
+
+int main() {
+
+    // Cria o grimório
+    Spellbook *book = create_spellbook();
+
+    // Adiciona três feitiços
+    add_spell(book, 101, "Fireball", 25);
+    add_spell(book, 102, "Ice Lance", 18);
+    add_spell(book, 103, "Lightning Bolt", 30);
+
+    // Exibe o grimório completo
+    display_spellbook(book);
+
+    // Libera toda a memória
+    destroy_spellbook(book);
+
+    return 0;
+}
