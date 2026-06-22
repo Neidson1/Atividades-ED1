@@ -1,0 +1,178 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    char nome[50];
+    int poder;
+} Feitico;
+
+typedef struct No {
+    Feitico dado;
+    struct No *prox;
+} No;
+
+typedef struct {
+    No *topo;
+} Pilha;
+
+void inicializar_pilha(Pilha *p) {
+    p->topo = NULL;
+}
+
+int pilha_vazia(Pilha *p) {
+    return p->topo == NULL;
+}
+
+void push(Pilha *p, Feitico f) {
+    No *novo = (No *)malloc(sizeof(No));
+
+    if (novo == NULL) {
+        printf("Erro de alocacao de memoria.\n");
+        return;
+    }
+
+    novo->dado = f;
+    novo->prox = p->topo;
+    p->topo = novo;
+}
+
+int pop(Pilha *p, Feitico *f) {
+    if (pilha_vazia(p)) {
+        return 0;
+    }
+
+    No *temp = p->topo;
+    *f = temp->dado;
+    p->topo = temp->prox;
+
+    free(temp);
+
+    return 1;
+}
+
+void inverter_pilha(Pilha *p) {
+    Pilha aux;
+    inicializar_pilha(&aux);
+
+    Feitico f;
+
+    while (!pilha_vazia(p)) {
+        pop(p, &f);
+        push(&aux, f);
+    }
+
+    p->topo = aux.topo;
+}
+
+void salvar_pilha_em_arquivo(Pilha *p, const char *nome_arquivo) {
+    FILE *fp = fopen(nome_arquivo, "wb");
+
+    if (fp == NULL) {
+        printf("Erro ao abrir o arquivo.\n");
+        return;
+    }
+
+    No *pi = p->topo;
+
+    while (pi != NULL) {
+        fwrite(&pi->dado, sizeof(Feitico), 1, fp);
+        pi = pi->prox;
+    }
+
+    fclose(fp);
+}
+
+void carregar_pilha_de_arquivo(Pilha *p, const char *nome_arquivo) {
+    FILE *fp = fopen(nome_arquivo, "rb");
+
+    if (fp == NULL) {
+        printf("Nenhum grimorio encontrado, iniciando com uma pilha vazia.\n");
+        return;
+    }
+
+    Feitico f;
+
+    while (fread(&f, sizeof(Feitico), 1, fp) == 1) {
+        push(p, f);
+    }
+
+    fclose(fp);
+
+    inverter_pilha(p);
+
+    printf("Grimorio carregado com sucesso!\n");
+}
+
+void mostrar_pilha(Pilha *p) {
+    if (pilha_vazia(p)) {
+        printf("Pilha vazia.\n");
+        return;
+    }
+
+    No *pi = p->topo;
+
+    printf("\n=== Feiticos do Grimorio ===\n");
+
+    while (pi != NULL) {
+        printf("Nome: %s | Poder: %d\n", pi->dado.nome, pi->dado.poder);
+        pi = pi->prox;
+    }
+}
+
+int main() {
+    Pilha grimorio;
+    inicializar_pilha(&grimorio);
+
+    carregar_pilha_de_arquivo(&grimorio, "grimorio.bin");
+
+    int opcao;
+    Feitico f;
+
+    do {
+        printf("\n===== MENU =====\n");
+        printf("1 - Adicionar feitico\n");
+        printf("2 - Remover feitico do topo\n");
+        printf("3 - Mostrar grimorio\n");
+        printf("0 - Sair\n");
+        printf("Escolha: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                printf("Nome do feitico: ");
+                scanf(" %[^\n]", f.nome);
+
+                printf("Poder do feitico: ");
+                scanf("%d", &f.poder);
+
+                push(&grimorio, f);
+
+                break;
+
+            case 2:
+                if (pop(&grimorio, &f)) {
+                    printf("Feitico removido: %s\n", f.nome);
+                } else {
+                    printf("Pilha vazia.\n");
+                }
+
+                break;
+
+            case 3:
+                mostrar_pilha(&grimorio);
+                break;
+
+            case 0:
+                salvar_pilha_em_arquivo(&grimorio, "grimorio.bin");
+                printf("Grimorio salvo com sucesso!\n");
+                break;
+
+            default:
+                printf("Opcao invalida.\n");
+        }
+
+    } while (opcao != 0);
+
+    return 0;
+}
