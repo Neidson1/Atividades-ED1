@@ -1,0 +1,332 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <time.h>
+#include <math.h>
+
+#include <allegro5/allegro.h>
+#include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
+
+#include "fila.h"
+
+typedef enum { MENU, JOGANDO, GAME_OVER } EstadoJogo;
+
+typedef struct { Posicao pos; int vidas; int pontos; char nome[30]; } Jogador;
+typedef struct { Posicao pos; int coletada; } Moeda;
+typedef struct { Posicao pos; int ativo; } PowerUp;
+
+typedef struct { float x, y, vx, vy; int life; } Particle;
+
+#define MAX_PARTICLES 300
+Particle particles[MAX_PARTICLES];
+int particle_count = 0;
+
+float anim_time = 0;
+int menu_option = 0; 
+int hit_timer = 0; 
+
+Obstaculo obstaculos[QTD_OBSTACULOS] = {
+    {200, 300, 120, 40, 1}, 
+    {450, 200, 40, 150, 1}, 
+    {550, 400, 150, 40, 1}  
+};
+
+void spawn_particles(int x, int y) {
+    for (int i = 0; i < 8; i++) {
+        if (particle_count < MAX_PARTICLES) {
+            particles[particle_count++] = (Particle){
+                (float)x, (float)y,
+                (rand() % 200 - 100) / 40.0f,
+                (rand() % 200 - 100) / 40.0f,
+                25
+            };
+        }
+    }
+}
+
+bool testaColisao(float x1, float y1, int w1, int h1, float x2, float y2, int w2, int h2) {
+    return (x1 < x2 + w2 && x1 + w1 > x2 && y1 < y2 + h2 && y1 + h1 > y2);
+}
+
+void reiniciarJogo(Jogador *j, Moeda *moedas, int qtdMoedas, FilaInimigos *f, int *qtdInimigos, PowerUp *p, int *fase, EstadoJogo *estado) {
+    j->pos.x = 400; j->pos.y = 500; j->vidas = 3; j->pontos = 0;
+    *fase = 1; *qtdInimigos = 3; particle_count = 0; hit_timer = 0;
+
+    for (int i = 0; i < qtdMoedas; i++) {
+        do {
+            moedas[i].pos.x = 40 + rand() % (LARGURA - 80);
+            moedas[i].pos.y = 40 + rand() % (ALTURA - 80);
+        } while(testaColisao(moedas[i].pos.x - 10, moedas[i].pos.y - 10, COIN_SIZE, COIN_SIZE, obstaculos[0].x, obstaculos[0].y, obstaculos[0].w, obstaculos[0].h) ||
+                testaColisao(moedas[i].pos.x - 10, moedas[i].pos.y - 10, COIN_SIZE, COIN_SIZE, obstaculos[1].x, obstaculos[1].y, obstaculos[1].w, obstaculos[1].h) ||
+                testaColisao(moedas[i].pos.x - 10, moedas[i].pos.y - 10, COIN_SIZE, COIN_SIZE, obstaculos[2].x, obstaculos[2].y, obstaculos[2].w, obstaculos[2].h));
+        moedas[i].coletada = 0;
+    }
+
+    esvaziarFila(f);
+    for (int i = 0; i < *qtdInimigos; i++) {
+        Inimigo ini = { {rand() % (LARGURA - ENEMY_SIZE), rand() % 150}, 2.0f + (rand() % 100) / 100.0f, 1, rand() % 3 };
+        inserirFila(f, ini);
+    }
+
+    p->pos.x = 40 + rand() % (LARGURA - 80); p->pos.y = 40 + rand() % (ALTURA - 80); p->ativo = 1;
+    *estado = MENU; menu_option = 0;
+}
+
+void moverJogador(Jogador *j, bool tecla[]) {
+    float antiga_x = j->pos.x; float antiga_y = j->pos.y;
+
+    if (tecla[ALLEGRO_KEY_W]) j->pos.y -= 4;
+    if (tecla[ALLEGRO_KEY_S]) j->pos.y += 4;
+    for(int i = 0; i < QTD_OBSTACULOS; i++)
+        if (testaColisao(j->pos.x, j->pos.y, PLAYER_SIZE, PLAYER_SIZE, obstaculos[i].x, obstaculos[i].y, obstaculos[i].w, obstaculos[i].h)) j->pos.y = antiga_y;
+
+    if (tecla[ALLEGRO_KEY_A]) j->pos.x -= 4;
+    if (tecla[ALLEGRO_KEY_D]) j->pos.x += 4;
+    for(int i = 0; i < QTD_OBSTACULOS; i++)
+        if (testaColisao(j->pos.x, j->pos.y, PLAYER_SIZE, PLAYER_SIZE, obstaculos[i].x, obstaculos[i].y, obstaculos[i].w, obstaculos[i].h)) j->pos.x = antiga_x;
+
+    if (j->pos.x < 0) j->pos.x = 0;
+    if (j->pos.x > LARGURA - PLAYER_SIZE) j->pos.x = LARGURA - PLAYER_SIZE;
+    if (j->pos.y < 0) j->pos.y = 0;
+    if (j->pos.y > ALTURA - PLAYER_SIZE) j->pos.y = ALTURA - PLAYER_SIZE;
+}
+
+//  IA MELHORADA: Evita Jitter separando eixos e previne empilhamento mútuo
+void moverInimigosFila(FilaInimigos *f, Jogador *j, int fase) {
+    NoInimigo *aux = f->inicio;
+
+    while (aux != NULL) {
+        if (aux->inimigo.ativo) {
+            float dx = j->pos.x - aux->inimigo.pos.x;
+            float dy = j->pos.y - aux->inimigo.pos.y;
+            float dist = sqrtf(dx * dx + dy * dy);
+
+            if (dist > 1.0f) {
+                // Progressão de velocidade por fase (+0.2 por nível)
+                float speed = aux->inimigo.velocidade + (fase * 0.2f);
+                float dirX = dx / dist; float dirY = dy / dist;
+
+                if (dist < 120.0f) speed *= 1.4f; // Comportamento de arrancada agressiva
+
+                // Movimento Eixo X separado com verificação de parede
+                float ant_x = aux->inimigo.pos.x;
+                aux->inimigo.pos.x += dirX * speed;
+                for(int i = 0; i < QTD_OBSTACULOS; i++) {
+                    if(testaColisao(aux->inimigo.pos.x, aux->inimigo.pos.y, ENEMY_SIZE, ENEMY_SIZE, obstaculos[i].x, obstaculos[i].y, obstaculos[i].w, obstaculos[i].h)) {
+                        aux->inimigo.pos.x = ant_x;
+                    }
+                }
+
+                // Movimento Eixo Y separado com verificação de parede
+                float ant_y = aux->inimigo.pos.y;
+                aux->inimigo.pos.y += dirY * speed;
+                for(int i = 0; i < QTD_OBSTACULOS; i++) {
+                    if(testaColisao(aux->inimigo.pos.x, aux->inimigo.pos.y, ENEMY_SIZE, ENEMY_SIZE, obstaculos[i].x, obstaculos[i].y, obstaculos[i].w, obstaculos[i].h)) {
+                        aux->inimigo.pos.y = ant_y;
+                    }
+                }
+            }
+
+            //  Força de Repulsão Mútua: Evita que múltiplos inimigos fiquem empilhados num bloco só
+            NoInimigo *outro = f->inicio;
+            while (outro != NULL) {
+                if (outro != aux && outro->inimigo.ativo) {
+                    float repX = aux->inimigo.pos.x - outro->inimigo.pos.x;
+                    float repY = aux->inimigo.pos.y - outro->inimigo.pos.y;
+                    float distInter = sqrtf(repX*repX + repY*repY);
+                    if (distInter > 0 && distInter < ENEMY_SIZE) {
+                        aux->inimigo.pos.x += (repX / distInter) * 0.8f;
+                        aux->inimigo.pos.y += (repY / distInter) * 0.8f;
+                    }
+                }
+                outro = outro->prox;
+            }
+
+            if (aux->inimigo.pos.x < 0) aux->inimigo.pos.x = 0;
+            if (aux->inimigo.pos.y < 0) aux->inimigo.pos.y = 0;
+            if (aux->inimigo.pos.x > LARGURA - ENEMY_SIZE) aux->inimigo.pos.x = LARGURA - ENEMY_SIZE;
+            if (aux->inimigo.pos.y > ALTURA - ENEMY_SIZE) aux->inimigo.pos.y = ALTURA - ENEMY_SIZE;
+        }
+        aux = aux->prox;
+    }
+}
+
+int main() {
+    srand(time(NULL));
+    if (!al_init()) return -1;
+    al_init_primitives_addon(); al_install_keyboard(); al_init_font_addon();
+
+    ALLEGRO_FONT *fonte = al_create_builtin_font();
+    ALLEGRO_DISPLAY *janela = al_create_display(LARGURA, ALTURA);
+    ALLEGRO_EVENT_QUEUE *filaEvents = al_create_event_queue();
+    ALLEGRO_TIMER *timer = al_create_timer(1.0 / 60);
+
+    al_register_event_source(filaEvents, al_get_display_event_source(janela));
+    al_register_event_source(filaEvents, al_get_keyboard_event_source());
+    al_register_event_source(filaEvents, al_get_timer_event_source(timer));
+
+    Jogador jogador = {{400, 500}, 3, 0, "Neidson"};
+    int fase = 1, quantidadeMoedas = 10;
+    
+    Moeda *moedas = (Moeda*)malloc(quantidadeMoedas * sizeof(Moeda));
+    for (int i = 0; i < quantidadeMoedas; i++) {
+        moedas[i].pos.x = 40 + rand() % (LARGURA - 80);
+        moedas[i].pos.y = 40 + rand() % (ALTURA - 80);
+        moedas[i].coletada = 0;
+    }
+
+    FilaInimigos fila_inimigos;
+    inicializarFila(&fila_inimigos);
+    carregarFila(&fila_inimigos);
+
+    int quantidadeInimigos = 3;
+    if (filaVazia(&fila_inimigos)) {
+        for (int i = 0; i < quantidadeInimigos; i++) {
+            Inimigo ini = {{rand() % (LARGURA - ENEMY_SIZE), rand() % 150}, 2.0f + (rand() % 100) / 100.0f, 1, rand() % 3};
+            inserirFila(&fila_inimigos, ini);
+        }
+    } else {
+        NoInimigo* temp = fila_inimigos.inicio;
+        int cont = 0;
+        while(temp) { if(temp->inimigo.velocidade <= 0.1f) temp->inimigo.velocidade = 2.0f; cont++; temp = temp->prox; }
+        quantidadeInimigos = cont;
+    }
+
+    PowerUp vidaExtra = {{40 + rand() % (LARGURA - 80), 40 + rand() % (ALTURA - 80)}, 1};
+    bool tecla[ALLEGRO_KEY_MAX] = {false};
+    EstadoJogo estado = MENU; bool executando = true, redesenhar = true;
+    float spawn_timer = 0;
+
+    al_start_timer(timer);
+
+    while (executando) {
+        ALLEGRO_EVENT evento;
+        al_wait_for_event(filaEvents, &evento);
+
+        if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) executando = false;
+
+        if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
+            tecla[evento.keyboard.keycode] = true;
+            if (estado == MENU) {
+                if (evento.keyboard.keycode == ALLEGRO_KEY_UP) menu_option--;
+                if (evento.keyboard.keycode == ALLEGRO_KEY_DOWN) menu_option++;
+                if (menu_option < 0) menu_option = 1; if (menu_option > 1) menu_option = 0;
+                if (evento.keyboard.keycode == ALLEGRO_KEY_ENTER) {
+                    if (menu_option == 0) estado = JOGANDO;
+                    if (menu_option == 1) executando = false;
+                }
+            }
+            if (estado == GAME_OVER && evento.keyboard.keycode == ALLEGRO_KEY_R) {
+                reiniciarJogo(&jogador, moedas, quantidadeMoedas, &fila_inimigos, &quantidadeInimigos, &vidaExtra, &fase, &estado);
+            }
+        }
+        if (evento.type == ALLEGRO_EVENT_KEY_UP) tecla[evento.keyboard.keycode] = false;
+
+        if (evento.type == ALLEGRO_EVENT_TIMER) {
+            anim_time += 1.0f / 60.0f;
+
+            if (estado == JOGANDO) {
+                moverJogador(&jogador, tecla);
+                moverInimigosFila(&fila_inimigos, &jogador, fase);
+                
+                // Colisões de itens
+                for (int i = 0; i < quantidadeMoedas; i++) {
+                    if (!moedas[i].coletada && testaColisao(jogador.pos.x, jogador.pos.y, PLAYER_SIZE, PLAYER_SIZE, moedas[i].pos.x - 10, moedas[i].pos.y - 10, COIN_SIZE, COIN_SIZE)) {
+                        moedas[i].coletada = 1; jogador.pontos += 10;
+                        spawn_particles(moedas[i].pos.x, moedas[i].pos.y);
+                    }
+                }
+
+                // Dano por Inimigos
+                NoInimigo *aux = fila_inimigos.inicio;
+                while (aux != NULL) {
+                    if (aux->inimigo.ativo && testaColisao(jogador.pos.x, jogador.pos.y, PLAYER_SIZE, PLAYER_SIZE, aux->inimigo.pos.x, aux->inimigo.pos.y, ENEMY_SIZE, ENEMY_SIZE)) {
+                        jogador.vidas--; hit_timer = 10;
+                        aux->inimigo.pos.x = rand() % (LARGURA - ENEMY_SIZE); aux->inimigo.pos.y = 0;
+                        if (jogador.vidas <= 0) estado = GAME_OVER;
+                    }
+                    aux = aux->prox;
+                }
+
+                //  Dificuldade Dinâmica no Gerador: Spawns ficam mais rápidos a cada fase passada!
+                spawn_timer += 1.0f / 60.0f;
+                float cooldownSpawn = 3.0f - (fase * 0.2f);
+                if (cooldownSpawn < 1.0f) cooldownSpawn = 1.0f; // Limite de segurança contra transbordo
+
+                //  Controle Dinâmico de Memória: Limita a fila a no máximo 15 inimigos simultâneos para evitar Lag
+                if (spawn_timer > cooldownSpawn && quantidadeInimigos < 15) {
+                    Inimigo novissimo = {{rand() % (LARGURA - ENEMY_SIZE), 0}, 2.0f + (rand() % 100) / 100.0f, 1, rand() % 3};
+                    inserirFila(&fila_inimigos, novissimo);
+                    quantidadeInimigos++; spawn_timer = 0;
+                }
+
+                if (vidaExtra.ativo && testaColisao(jogador.pos.x, jogador.pos.y, PLAYER_SIZE, PLAYER_SIZE, vidaExtra.pos.x - 12, vidaExtra.pos.y - 12, POWERUP_SIZE, POWERUP_SIZE)) {
+                    jogador.vidas = (jogador.vidas < 3) ? jogador.vidas + 1 : 3;
+                    vidaExtra.ativo = 0;
+                }
+
+                for (int i = 0; i < particle_count; i++) { particles[i].x += particles[i].vx; particles[i].y += particles[i].vy; particles[i].life--; }
+                int w = 0;
+                for (int i = 0; i < particle_count; i++) if (particles[i].life > 0) particles[w++] = particles[i];
+                particle_count = w;
+
+                if (jogador.pontos >= fase * 100) {
+                    fase++;
+                    vidaExtra.pos.x = 40 + rand() % (LARGURA - 80); vidaExtra.pos.y = 40 + rand() % (ALTURA - 80); vidaExtra.ativo = 1; // Respawn do Powerup na nova fase
+                    for (int i = 0; i < quantidadeMoedas; i++) { moedas[i].pos.x = 40 + rand() % (LARGURA - 80); moedas[i].pos.y = 40 + rand() % (ALTURA - 80); moedas[i].coletada = 0; }
+                }
+            }
+            redesenhar = true;
+        }
+
+        if (redesenhar && al_is_event_queue_empty(filaEvents)) {
+            redesenhar = false;
+            if (estado == MENU) {
+                al_clear_to_color(al_map_rgb(10, 10, 20));
+                al_draw_text(fonte, al_map_rgb(255, 255, 255), LARGURA/2, 120, ALLEGRO_ALIGN_CENTER, "NEIDSON'S ADVENTURE");
+                al_draw_text(fonte, (menu_option == 0) ? al_map_rgb(0, 255, 0) : al_map_rgb(200, 200, 200), LARGURA/2, 240, ALLEGRO_ALIGN_CENTER, (menu_option == 0) ? "> JOGAR" : "JOGAR");
+                al_draw_text(fonte, (menu_option == 1) ? al_map_rgb(255, 0, 0) : al_map_rgb(200, 200, 200), LARGURA/2, 290, ALLEGRO_ALIGN_CENTER, (menu_option == 1) ? "> SAIR" : "SAIR");
+            } else if (estado == JOGANDO) {
+                al_clear_to_color(al_map_rgb(15, 25, 15)); 
+                for(int i = 0; i < QTD_OBSTACULOS; i++) {
+                    al_draw_filled_rectangle(obstaculos[i].x, obstaculos[i].y, obstaculos[i].x + obstaculos[i].w, obstaculos[i].y + obstaculos[i].h, al_map_rgb(100, 100, 110));
+                    al_draw_rectangle(obstaculos[i].x, obstaculos[i].y, obstaculos[i].x + obstaculos[i].w, obstaculos[i].y + obstaculos[i].h, al_map_rgb(180, 180, 190), 2);
+                }
+                if (vidaExtra.ativo) al_draw_filled_circle(vidaExtra.pos.x, vidaExtra.pos.y, 12, al_map_rgb(0, 255, 0));
+                for (int i = 0; i < quantidadeMoedas; i++) if (!moedas[i].coletada) al_draw_filled_circle(moedas[i].pos.x, moedas[i].pos.y, 10, al_map_rgb(255, 255, 0));
+                for (int i = 0; i < particle_count; i++) al_draw_filled_circle(particles[i].x, particles[i].y, 2, al_map_rgb(255, 255, 80));
+
+                NoInimigo *auxR = fila_inimigos.inicio; int idx = 0;
+                while (auxR != NULL) {
+                    if (auxR->inimigo.ativo) {
+                        float offset = sinf(anim_time * 3 + idx) * 4;
+                        al_draw_filled_rectangle(auxR->inimigo.pos.x, auxR->inimigo.pos.y + offset, auxR->inimigo.pos.x + ENEMY_SIZE, auxR->inimigo.pos.y + ENEMY_SIZE + offset, (auxR->inimigo.tipo == 1) ? al_map_rgb(255,0,0) : al_map_rgb(200,50,50));
+                    }
+                    idx++; auxR = auxR->prox;
+                }
+
+                int px = jogador.pos.x; int py = jogador.pos.y;
+                al_draw_filled_rectangle(px, py, px + PLAYER_SIZE, py + PLAYER_SIZE, (hit_timer > 0) ? al_map_rgb(255, 50, 50) : al_map_rgb(40, 80, 240));
+                if (hit_timer > 0) hit_timer--;
+
+                char hud[100]; sprintf(hud, "Pontos: %d   Fase: %d   Inimigos ativos: %d", jogador.pontos, fase, quantidadeInimigos);
+                al_draw_text(fonte, al_map_rgb(255, 255, 255), 15, 15, 0, hud);
+                al_draw_filled_rectangle(15, 38, 15 + jogador.vidas * 35, 50, al_map_rgb(50, 220, 50));
+            } else if (estado == GAME_OVER) {
+                al_clear_to_color(al_map_rgb(50, 10, 10));
+                al_draw_text(fonte, al_map_rgb(255, 50, 50), LARGURA/2, ALTURA/2 - 20, ALLEGRO_ALIGN_CENTER, "GAME OVER");
+                al_draw_text(fonte, al_map_rgb(200, 200, 200), LARGURA/2, ALTURA/2 + 20, ALLEGRO_ALIGN_CENTER, "Pressione 'R' para reiniciar");
+            }
+            al_flip_display();
+        }
+    }
+
+    FILE *arqTxt = fopen("ranking.txt", "a");
+    if (arqTxt) { fprintf(arqTxt, "%s %d\n", jogador.nome, jogador.pontos); fclose(arqTxt); }
+
+    salvarFila(&fila_inimigos); esvaziarFila(&fila_inimigos); free(moedas);
+    al_destroy_font(fonte); al_destroy_timer(timer); al_destroy_event_queue(filaEvents); al_destroy_display(janela);
+    return 0;
+}
