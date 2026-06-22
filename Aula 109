@@ -1,0 +1,145 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int id;
+    char nickname[50];
+} Jogador;
+
+typedef struct No {
+    Jogador dado;
+    struct No *prox;
+} No;
+
+typedef struct {
+    No *inicio;
+    No *fim;
+} Fila;
+
+// Inicializa a fila
+void inicializar(Fila *f) {
+    f->inicio = NULL;
+    f->fim = NULL;
+}
+
+// Insere um jogador no final da fila
+void inserir(Fila *f, Jogador j) {
+
+    No *novo = (No *) malloc(sizeof(No));
+
+    if (novo == NULL) {
+        printf("Erro de alocacao de memoria!\n");
+        return;
+    }
+
+    novo->dado = j;
+    novo->prox = NULL;
+
+    if (f->inicio == NULL) {
+        f->inicio = novo;
+        f->fim = novo;
+    }
+    else {
+        f->fim->prox = novo;
+        f->fim = novo;
+    }
+
+    printf("Jogador adicionado a fila com sucesso!\n");
+}
+
+// Mostra os jogadores da fila
+void mostrar(Fila *f) {
+
+    No *aux = f->inicio;
+
+    if (aux == NULL) {
+        printf("\nA fila de matchmaking esta vazia.\n");
+        return;
+    }
+
+    printf("\n=== FILA DE MATCHMAKING ===\n");
+
+    while (aux != NULL) {
+
+        printf("ID: %d\n", aux->dado.id);
+        printf("Nickname: %s\n", aux->dado.nickname);
+        printf("------------------------\n");
+
+        aux = aux->prox;
+    }
+}
+
+// Libera a memória da fila
+void liberarFila(Fila *f) {
+
+    No *aux = f->inicio;
+    No *temp;
+
+    while (aux != NULL) {
+        temp = aux;
+        aux = aux->prox;
+        free(temp);
+    }
+
+    f->inicio = NULL;
+    f->fim = NULL;
+}
+
+int main() {
+
+    Fila fila;
+    Jogador j;
+    int opcao;
+
+    inicializar(&fila);
+
+    do {
+
+        printf("\n===== MENU =====\n");
+        printf("1. Adicionar Jogador na Fila\n");
+        printf("2. Mostrar Fila\n");
+        printf("3. Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+
+        case 1:
+
+            printf("Digite o ID do jogador: ");
+            scanf("%d", &j.id);
+
+            getchar();
+
+            printf("Digite o nickname: ");
+            fgets(j.nickname, 50, stdin);
+            j.nickname[strcspn(j.nickname, "\n")] = '\0';
+
+            inserir(&fila, j);
+
+            break;
+
+        case 2:
+
+            mostrar(&fila);
+
+            break;
+
+        case 3:
+
+            liberarFila(&fila);
+
+            printf("Encerrando o programa...\n");
+
+            break;
+
+        default:
+
+            printf("Opcao invalida!\n");
+        }
+
+    } while (opcao != 3);
+
+    return 0;
+}
